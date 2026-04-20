@@ -1,0 +1,384 @@
+{% extends "base.html" %}
+{% block title %}PharmaLane — AI Medical Recommendation System{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Hero */
+  .hero {
+    min-height: 92vh;
+    display: flex;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+    background: radial-gradient(ellipse at 60% 50%, rgba(0,201,167,0.08) 0%, transparent 70%),
+                radial-gradient(ellipse at 10% 80%, rgba(88,166,255,0.06) 0%, transparent 60%),
+                var(--bg-dark);
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: url("{{ url_for('static', filename='images/bg_main.jpg') }}") center/cover no-repeat;
+    opacity: 0.04;
+  }
+  .hero-content { position: relative; z-index: 1; }
+  .hero-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0,201,167,0.1);
+    border: 1px solid rgba(0,201,167,0.25);
+    border-radius: 20px;
+    padding: 0.35rem 1rem;
+    font-size: 0.82rem;
+    color: var(--primary);
+    font-weight: 500;
+    margin-bottom: 1.5rem;
+  }
+  .hero-tag .dot { width: 6px; height: 6px; background: var(--primary); border-radius: 50%; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  .hero h1 {
+    font-size: clamp(2.2rem, 5vw, 3.8rem);
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -1px;
+    margin-bottom: 1.2rem;
+  }
+  .hero h1 .highlight { color: var(--primary); }
+  .hero p.lead {
+    font-size: 1.1rem;
+    color: #8b949e;
+    max-width: 520px;
+    line-height: 1.7;
+    margin-bottom: 2rem;
+  }
+  .hero-btns { display: flex; gap: 12px; flex-wrap: wrap; }
+  .hero-stats {
+    display: flex;
+    gap: 2rem;
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border);
+  }
+  .stat-item h3 { font-size: 1.8rem; font-weight: 700; color: var(--primary); }
+  .stat-item p { font-size: 0.82rem; color: var(--text-muted); margin: 0; }
+  /* Hero visual */
+  .hero-visual {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .hero-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.5rem;
+    width: 100%;
+    max-width: 380px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  }
+  .hero-card .card-header-custom {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 1.2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .ai-icon { width: 36px; height: 36px; background: rgba(0,201,167,0.15); border-radius: 8px; display:flex; align-items:center; justify-content:center; color: var(--primary); }
+  .symptom-tag {
+    display: inline-block;
+    background: rgba(0,201,167,0.1);
+    border: 1px solid rgba(0,201,167,0.2);
+    color: var(--primary);
+    border-radius: 20px;
+    padding: 0.2rem 0.7rem;
+    font-size: 0.78rem;
+    margin: 3px;
+  }
+  .result-row { display:flex; justify-content:space-between; align-items:center; padding: 0.5rem 0; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
+  .result-row:last-child { border-bottom: none; }
+  .result-label { color: var(--text-muted); }
+  .result-value { color: #e6edf3; font-weight: 500; }
+  .confidence-bar { height: 4px; background: var(--border); border-radius: 2px; margin-top: 4px; }
+  .confidence-fill { height: 100%; background: var(--primary); border-radius: 2px; width: 94%; }
+
+  /* Features */
+  .features { padding: 5rem 0; }
+  .feature-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.8rem;
+    height: 100%;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+  .feature-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--primary), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .feature-card:hover { border-color: rgba(0,201,167,0.3); transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,0.3); }
+  .feature-card:hover::before { opacity: 1; }
+  .feature-icon {
+    width: 48px; height: 48px;
+    background: rgba(0,201,167,0.12);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.3rem;
+    color: var(--primary);
+    margin-bottom: 1.2rem;
+  }
+  .feature-card h5 { font-weight: 600; margin-bottom: 0.6rem; font-size: 1rem; }
+  .feature-card p { color: var(--text-muted); font-size: 0.88rem; line-height: 1.6; margin: 0; }
+
+  /* How it works */
+  .how-it-works { padding: 5rem 0; background: var(--bg-card); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+  .step-card { text-align: center; padding: 1.5rem; }
+  .step-number {
+    width: 56px; height: 56px;
+    background: rgba(0,201,167,0.12);
+    border: 2px solid rgba(0,201,167,0.3);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.3rem; font-weight: 700; color: var(--primary);
+    margin: 0 auto 1rem;
+  }
+  .step-card h5 { font-weight: 600; margin-bottom: 0.5rem; }
+  .step-card p { color: var(--text-muted); font-size: 0.88rem; }
+  .step-connector { display: flex; align-items: center; justify-content: center; color: var(--border); font-size: 1.5rem; padding-top: 1.5rem; }
+
+  /* Testimonials */
+  .testimonials { padding: 5rem 0; }
+  .testimonial-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.8rem;
+    height: 100%;
+  }
+  .stars { color: #f0a500; font-size: 0.85rem; margin-bottom: 0.8rem; }
+  .testimonial-card p { color: #c9d1d9; font-size: 0.9rem; line-height: 1.6; font-style: italic; margin-bottom: 1.2rem; }
+  .doctor-info { display: flex; align-items: center; gap: 10px; }
+  .doctor-avatar {
+    width: 40px; height: 40px;
+    background: rgba(0,201,167,0.15);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--primary); font-weight: 700; font-size: 0.9rem;
+  }
+  .doctor-info h6 { margin: 0; font-size: 0.88rem; font-weight: 600; }
+  .doctor-info small { color: var(--text-muted); font-size: 0.78rem; }
+
+  /* CTA */
+  .cta-section {
+    padding: 5rem 0;
+    text-align: center;
+    background: radial-gradient(ellipse at center, rgba(0,201,167,0.08) 0%, transparent 70%);
+  }
+  .cta-section h2 { font-size: 2.2rem; font-weight: 700; margin-bottom: 1rem; }
+  .cta-section p { color: var(--text-muted); font-size: 1rem; margin-bottom: 2rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Hero -->
+<section class="hero">
+  <div class="container">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-6 hero-content">
+        <div class="hero-tag"><span class="dot"></span> AI-Powered Healthcare Platform</div>
+        <h1>Your Personal <span class="highlight">Medical AI</span> Assistant</h1>
+        <p class="lead">Enter your symptoms and get instant disease predictions, personalized medicine recommendations, diet plans, and connect with real doctors via video call.</p>
+        <div class="hero-btns">
+          {% if current_user.is_authenticated %}
+            <a href="{{ url_for('dashboard') }}" class="btn btn-primary-custom btn-lg"><i class="fa fa-stethoscope me-2"></i>Check Symptoms</a>
+            <a href="{{ url_for('appointments') }}" class="btn btn-outline-custom btn-lg"><i class="fa fa-calendar me-2"></i>Book Appointment</a>
+          {% else %}
+            <a href="{{ url_for('register') }}" class="btn btn-primary-custom btn-lg"><i class="fa fa-rocket me-2"></i>Get Started Free</a>
+            <a href="{{ url_for('login') }}" class="btn btn-outline-custom btn-lg">Login</a>
+          {% endif %}
+        </div>
+        <div class="hero-stats">
+          <div class="stat-item"><h3>41+</h3><p>Diseases Detected</p></div>
+          <div class="stat-item"><h3>132</h3><p>Symptoms Analyzed</p></div>
+          <div class="stat-item"><h3>94%</h3><p>Accuracy Rate</p></div>
+        </div>
+      </div>
+      <div class="col-lg-6 hero-visual">
+        <div class="hero-card">
+          <div class="card-header-custom">
+            <div class="ai-icon"><i class="fa fa-brain"></i></div>
+            <div>
+              <div style="font-weight:600; font-size:0.9rem;">AI Analysis</div>
+              <div style="font-size:0.75rem; color:var(--text-muted);">Real-time prediction</div>
+            </div>
+            <span class="ms-auto section-badge" style="font-size:0.7rem;">Live</span>
+          </div>
+          <div style="margin-bottom:1rem;">
+            <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:6px;">Symptoms detected:</div>
+            <span class="symptom-tag">headache</span>
+            <span class="symptom-tag">fever</span>
+            <span class="symptom-tag">fatigue</span>
+            <span class="symptom-tag">nausea</span>
+          </div>
+          <div class="result-row"><span class="result-label">Predicted Disease</span><span class="result-value" style="color:var(--primary);">Migraine</span></div>
+          <div class="result-row"><span class="result-label">Confidence</span><span class="result-value">94%</span></div>
+          <div class="confidence-bar mt-1"><div class="confidence-fill"></div></div>
+          <div class="result-row mt-2"><span class="result-label">Medications</span><span class="result-value">3 found</span></div>
+          <div class="result-row"><span class="result-label">Diet Plan</span><span class="result-value">Personalized</span></div>
+          <div class="result-row"><span class="result-label">Doctor Available</span><span class="result-value" style="color:#3fb950;">● Online</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Features -->
+<section class="features">
+  <div class="container">
+    <div class="text-center mb-5">
+      <span class="section-badge">Features</span>
+      <h2 class="mt-3" style="font-size:2rem; font-weight:700;">Everything you need for better health</h2>
+      <p style="color:var(--text-muted); max-width:500px; margin:0.8rem auto 0;">A complete healthcare platform powered by machine learning and real doctors.</p>
+    </div>
+    <div class="row g-4">
+      <div class="col-md-6 col-lg-4">
+        <div class="feature-card">
+          <div class="feature-icon"><i class="fa fa-brain"></i></div>
+          <h5>AI Symptom Analysis</h5>
+          <p>Our ML model trained on thousands of cases predicts diseases from your symptoms with high accuracy using SVM classification.</p>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-4">
+        <div class="feature-card">
+          <div class="feature-icon"><i class="fa fa-pills"></i></div>
+          <h5>Medicine Recommendations</h5>
+          <p>Get personalized medication suggestions, dosage guidance, and precautions tailored to your predicted condition.</p>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-4">
+        <div class="feature-card">
+          <div class="feature-icon"><i class="fa fa-video"></i></div>
+          <h5>Video Consultations</h5>
+          <p>Book appointments with certified doctors and join secure video calls directly in the app — no third-party software needed.</p>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-4">
+        <div class="feature-card">
+          <div class="feature-icon"><i class="fa fa-salad"></i></div>
+          <h5>Diet & Workout Plans</h5>
+          <p>Receive disease-specific diet recommendations and workout routines to support your recovery and overall wellness.</p>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-4">
+        <div class="feature-card">
+          <div class="feature-icon"><i class="fa fa-calendar-check"></i></div>
+          <h5>Smart Scheduling</h5>
+          <p>Book, manage, and track doctor appointments with conflict detection. Get unique video call rooms for each session.</p>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-4">
+        <div class="feature-card">
+          <div class="feature-icon"><i class="fa fa-shield-halved"></i></div>
+          <h5>Privacy First</h5>
+          <p>Your health data is encrypted and stored securely. We follow industry-standard security practices to protect your information.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- How it works -->
+<section class="how-it-works">
+  <div class="container">
+    <div class="text-center mb-5">
+      <span class="section-badge">How It Works</span>
+      <h2 class="mt-3" style="font-size:2rem; font-weight:700;">Get results in 3 simple steps</h2>
+    </div>
+    <div class="row align-items-start">
+      <div class="col-md-3 step-card">
+        <div class="step-number">1</div>
+        <h5>Create Account</h5>
+        <p>Sign up for free in seconds. No credit card required.</p>
+      </div>
+      <div class="col-md-1 step-connector d-none d-md-flex"><i class="fa fa-arrow-right"></i></div>
+      <div class="col-md-3 step-card">
+        <div class="step-number">2</div>
+        <h5>Enter Symptoms</h5>
+        <p>Type your symptoms or use voice input. Our AI analyzes them instantly.</p>
+      </div>
+      <div class="col-md-1 step-connector d-none d-md-flex"><i class="fa fa-arrow-right"></i></div>
+      <div class="col-md-3 step-card">
+        <div class="step-number">3</div>
+        <h5>Get Recommendations</h5>
+        <p>Receive disease prediction, medicines, diet plan, and book a doctor if needed.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Testimonials -->
+<section class="testimonials">
+  <div class="container">
+    <div class="text-center mb-5">
+      <span class="section-badge">Trusted By Experts</span>
+      <h2 class="mt-3" style="font-size:2rem; font-weight:700;">What doctors say</h2>
+    </div>
+    <div class="row g-4">
+      <div class="col-md-4">
+        <div class="testimonial-card">
+          <div class="stars">★★★★★</div>
+          <p>"PharmaLane provides accurate and timely information that is crucial for my patients' well-being. The prescription recommendations are spot on."</p>
+          <div class="doctor-info">
+            <div class="doctor-avatar">AK</div>
+            <div><h6>Dr. A. Kafil Abbasi</h6><small>B.H.M.S, General Physician</small></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="testimonial-card">
+          <div class="stars">★★★★★</div>
+          <p>"The AI system's predictions are incredibly reliable, making my job easier and more effective. I recommend it to all my colleagues."</p>
+          <div class="doctor-info">
+            <div class="doctor-avatar">NA</div>
+            <div><h6>Dr. Nishat Amber</h6><small>New Life Pharmaceuticals</small></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="testimonial-card">
+          <div class="stars">★★★★☆</div>
+          <p>"A trustworthy platform that helps me recommend the best treatment options. The video consultation feature is a game changer."</p>
+          <div class="doctor-info">
+            <div class="doctor-avatar">SB</div>
+            <div><h6>Dr. Sanjeev Bhadouriya</h6><small>Senior Consultant</small></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="container">
+    <h2>Ready to take control of your health?</h2>
+    <p>Join thousands of users who trust PharmaLane for smarter healthcare decisions.</p>
+    {% if current_user.is_authenticated %}
+      <a href="{{ url_for('dashboard') }}" class="btn btn-primary-custom btn-lg px-5"><i class="fa fa-stethoscope me-2"></i>Go to Dashboard</a>
+    {% else %}
+      <a href="{{ url_for('register') }}" class="btn btn-primary-custom btn-lg px-5"><i class="fa fa-rocket me-2"></i>Get Started — It's Free</a>
+    {% endif %}
+  </div>
+</section>
+
+{% endblock %}

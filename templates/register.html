@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block title %}Register — PharmaLane{% endblock %}
+
+{% block extra_css %}
+<style>
+  .auth-wrapper {
+    min-height: calc(100vh - 70px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+    background: radial-gradient(ellipse at 50% 30%, rgba(0,201,167,0.06) 0%, transparent 60%);
+  }
+  .auth-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 2.5rem;
+    width: 100%;
+    max-width: 460px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  }
+  .auth-logo { text-align: center; margin-bottom: 2rem; }
+  .auth-logo h2 { font-weight: 700; font-size: 1.6rem; }
+  .auth-logo h2 span { color: var(--primary); }
+  .auth-logo p { color: var(--text-muted); font-size: 0.88rem; margin-top: 0.3rem; }
+  .form-label { font-size: 0.85rem; font-weight: 500; color: #c9d1d9; margin-bottom: 0.4rem; }
+  .form-control, .form-select {
+    background: var(--bg-card2);
+    border: 1px solid var(--border);
+    color: #e6edf3;
+    border-radius: 8px;
+    padding: 0.65rem 1rem;
+    font-size: 0.9rem;
+  }
+  .form-control:focus, .form-select:focus { background: var(--bg-card2); border-color: var(--primary); color: #e6edf3; box-shadow: 0 0 0 3px rgba(0,201,167,0.1); }
+  .form-control::placeholder { color: #484f58; }
+  .form-select option { background: #1c2128; }
+  .btn-submit { width: 100%; padding: 0.7rem; font-weight: 600; font-size: 0.95rem; border-radius: 8px; background: var(--primary); border: none; color: #000; transition: all 0.2s; }
+  .btn-submit:hover { background: var(--primary-dark); transform: translateY(-1px); }
+  .auth-footer { text-align: center; margin-top: 1.5rem; font-size: 0.85rem; color: var(--text-muted); }
+  .auth-footer a { color: var(--primary); text-decoration: none; font-weight: 500; }
+  .role-toggle { display: flex; gap: 8px; margin-bottom: 1.5rem; }
+  .role-btn {
+    flex: 1; padding: 0.6rem; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--bg-card2); color: var(--text-muted); cursor: pointer;
+    font-size: 0.85rem; font-weight: 500; text-align: center; transition: all 0.2s;
+  }
+  .role-btn.active { border-color: var(--primary); background: rgba(0,201,167,0.1); color: var(--primary); }
+  #specialtyGroup { display: none; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <h2>Pharma<span>Lane</span></h2>
+      <p>Create your free account</p>
+    </div>
+    <form method="POST" action="{{ url_for('register') }}">
+      <!-- Role selector -->
+      <div class="mb-3">
+        <label class="form-label">I am a</label>
+        <div class="role-toggle">
+          <div class="role-btn active" onclick="setRole('patient')"><i class="fa fa-user me-1"></i>Patient</div>
+          <div class="role-btn" onclick="setRole('doctor')"><i class="fa fa-user-md me-1"></i>Doctor</div>
+        </div>
+        <input type="hidden" name="role" id="roleInput" value="patient" />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Full Name</label>
+        <input type="text" name="name" class="form-control" placeholder="John Doe" required />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Email Address</label>
+        <input type="email" name="email" class="form-control" placeholder="you@example.com" required />
+      </div>
+      <div class="mb-3" id="specialtyGroup">
+        <label class="form-label">Specialty</label>
+        <select name="specialty" class="form-select">
+          <option value="">Select specialty</option>
+          <option>General Physician</option>
+          <option>Cardiologist</option>
+          <option>Neurologist</option>
+          <option>Dermatologist</option>
+          <option>Orthopedist</option>
+          <option>Pediatrician</option>
+          <option>Psychiatrist</option>
+          <option>Endocrinologist</option>
+        </select>
+      </div>
+      <div class="mb-4">
+        <label class="form-label">Password</label>
+        <input type="password" name="password" class="form-control" placeholder="Min. 6 characters" required minlength="6" />
+      </div>
+      <button type="submit" class="btn btn-submit"><i class="fa fa-user-plus me-2"></i>Create Account</button>
+    </form>
+    <div class="auth-footer">
+      Already have an account? <a href="{{ url_for('login') }}">Sign in</a>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  function setRole(role) {
+    document.getElementById('roleInput').value = role;
+    document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
+    event.target.closest('.role-btn').classList.add('active');
+    document.getElementById('specialtyGroup').style.display = role === 'doctor' ? 'block' : 'none';
+  }
+</script>
+{% endblock %}

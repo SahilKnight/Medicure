@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Video Call — PharmaLane{% endblock %}
+
+{% block extra_css %}
+<style>
+  .call-wrapper {
+    min-height: calc(100vh - 70px);
+    display: flex;
+    flex-direction: column;
+    background: #0a0e13;
+  }
+  .call-header {
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border);
+    padding: 0.8rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .call-info { display: flex; align-items: center; gap: 12px; }
+  .live-badge {
+    background: rgba(248,81,73,0.15);
+    border: 1px solid rgba(248,81,73,0.3);
+    color: #f85149;
+    border-radius: 20px;
+    padding: 0.2rem 0.7rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: flex; align-items: center; gap: 5px;
+  }
+  .live-dot { width: 6px; height: 6px; background: #f85149; border-radius: 50%; animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  .call-info h6 { margin: 0; font-weight: 600; font-size: 0.95rem; }
+  .call-info small { color: var(--text-muted); font-size: 0.8rem; }
+  .jitsi-frame {
+    flex: 1;
+    width: 100%;
+    border: none;
+    min-height: calc(100vh - 130px);
+  }
+  .btn-end-call {
+    background: #f85149;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 0.5rem 1.2rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s;
+  }
+  .btn-end-call:hover { background: #da3633; color: #fff; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="call-wrapper">
+  <div class="call-header">
+    <div class="call-info">
+      <div class="live-badge"><span class="live-dot"></span>LIVE</div>
+      <div>
+        <h6>
+          {% if current_user.role == 'patient' %}
+            Consultation with {{ appointment.doctor.name }}
+          {% else %}
+            Patient: {{ appointment.patient.name }}
+          {% endif %}
+        </h6>
+        <small><i class="fa fa-calendar me-1"></i>{{ appointment.date }} at {{ appointment.time }}</small>
+      </div>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <span style="font-size:0.78rem; color:var(--text-muted);"><i class="fa fa-lock me-1"></i>Encrypted</span>
+      <a href="{{ url_for('appointments') }}" class="btn-end-call"><i class="fa fa-phone-slash me-1"></i>End Call</a>
+    </div>
+  </div>
+
+  <iframe
+    class="jitsi-frame"
+    src="https://meet.jit.si/{{ room_id }}#userInfo.displayName={{ current_user.name | urlencode }}&config.startWithAudioMuted=false&config.startWithVideoMuted=false&interfaceConfig.SHOW_JITSI_WATERMARK=false&interfaceConfig.TOOLBAR_BUTTONS=[%22microphone%22,%22camera%22,%22desktop%22,%22chat%22,%22raisehand%22,%22tileview%22,%22hangup%22]"
+    allow="camera; microphone; fullscreen; display-capture; autoplay"
+    allowfullscreen
+  ></iframe>
+</div>
+{% endblock %}

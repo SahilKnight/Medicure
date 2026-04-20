@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+{% block title %}Appointments — PharmaLane{% endblock %}
+
+{% block extra_css %}
+<style>
+  .page-hero {
+    background: linear-gradient(135deg, rgba(88,166,255,0.08) 0%, transparent 60%);
+    border-bottom: 1px solid var(--border);
+    padding: 2.5rem 0 2rem;
+  }
+  .page-hero h1 { font-size: 1.8rem; font-weight: 700; }
+  .page-hero p { color: var(--text-muted); font-size: 0.9rem; margin: 0; }
+  /* Doctor cards */
+  .doctor-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.2rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    height: 100%;
+  }
+  .doctor-card:hover, .doctor-card.selected { border-color: var(--primary); background: rgba(0,201,167,0.05); }
+  .doctor-card.selected { box-shadow: 0 0 0 2px rgba(0,201,167,0.3); }
+  .doc-avatar {
+    width: 48px; height: 48px;
+    background: rgba(0,201,167,0.15);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 1rem; color: var(--primary);
+    margin-bottom: 0.8rem;
+  }
+  .doctor-card h6 { font-weight: 600; font-size: 0.9rem; margin-bottom: 0.2rem; }
+  .doctor-card small { color: var(--text-muted); font-size: 0.78rem; }
+  .online-dot { width: 8px; height: 8px; background: #3fb950; border-radius: 50%; display: inline-block; margin-right: 4px; }
+  /* Booking form */
+  .booking-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 2rem;
+  }
+  .form-label { font-size: 0.85rem; font-weight: 500; color: #c9d1d9; margin-bottom: 0.4rem; }
+  .form-control, .form-select, textarea {
+    background: var(--bg-card2) !important;
+    border: 1px solid var(--border) !important;
+    color: #e6edf3 !important;
+    border-radius: 8px;
+    font-size: 0.9rem;
+  }
+  .form-control:focus, .form-select:focus, textarea:focus {
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 0 3px rgba(0,201,167,0.1) !important;
+  }
+  .form-select option { background: #1c2128; }
+  textarea { resize: vertical; }
+  .btn-book { background: var(--primary); color: #000; font-weight: 700; border: none; border-radius: 8px; padding: 0.7rem 2rem; width: 100%; font-size: 0.95rem; transition: all 0.2s; }
+  .btn-book:hover { background: var(--primary-dark); transform: translateY(-1px); }
+  /* Appointment list */
+  .appt-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.2rem 1.5rem;
+    margin-bottom: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    transition: border-color 0.2s;
+  }
+  .appt-card:hover { border-color: rgba(0,201,167,0.2); }
+  .appt-date-box {
+    background: rgba(0,201,167,0.1);
+    border: 1px solid rgba(0,201,167,0.2);
+    border-radius: 10px;
+    padding: 0.6rem 1rem;
+    text-align: center;
+    min-width: 70px;
+  }
+  .appt-date-box .day { font-size: 1.4rem; font-weight: 700; color: var(--primary); line-height: 1; }
+  .appt-date-box .month { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; }
+  .appt-info { flex: 1; }
+  .appt-info h6 { font-weight: 600; margin-bottom: 0.2rem; font-size: 0.92rem; }
+  .appt-info small { color: var(--text-muted); font-size: 0.8rem; }
+  .status-badge {
+    padding: 0.25rem 0.7rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  .status-scheduled { background: rgba(0,201,167,0.12); color: var(--primary); border: 1px solid rgba(0,201,167,0.25); }
+  .status-cancelled { background: rgba(248,81,73,0.12); color: #f85149; border: 1px solid rgba(248,81,73,0.25); }
+  .status-completed { background: rgba(63,185,80,0.12); color: #3fb950; border: 1px solid rgba(63,185,80,0.25); }
+  .btn-join { background: var(--primary); color: #000; font-weight: 600; border: none; border-radius: 6px; padding: 0.4rem 1rem; font-size: 0.82rem; text-decoration: none; transition: all 0.2s; }
+  .btn-join:hover { background: var(--primary-dark); color: #000; }
+  .btn-cancel { background: transparent; color: #f85149; border: 1px solid rgba(248,81,73,0.3); border-radius: 6px; padding: 0.4rem 0.8rem; font-size: 0.8rem; transition: all 0.2s; }
+  .btn-cancel:hover { background: rgba(248,81,73,0.1); }
+  .empty-state { text-align: center; padding: 3rem; color: var(--text-muted); }
+  .empty-state i { font-size: 2.5rem; margin-bottom: 1rem; opacity: 0.4; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-hero">
+  <div class="container">
+    <h1><i class="fa fa-calendar-check me-2" style="color:#58a6ff"></i>Appointments</h1>
+    <p>Book video consultations with certified doctors and manage your schedule.</p>
+  </div>
+</div>
+
+<div class="container py-4">
+  <div class="row g-4">
+
+    <!-- Booking Form -->
+    {% if current_user.role == 'patient' %}
+    <div class="col-lg-5">
+      <div class="booking-card">
+        <h5 style="font-weight:700; margin-bottom:1.5rem;"><i class="fa fa-calendar-plus me-2" style="color:var(--primary)"></i>Book Appointment</h5>
+
+        <!-- Doctor selection -->
+        <div class="mb-3">
+          <label class="form-label">Select Doctor</label>
+          <div class="row g-2" id="doctorGrid">
+            {% for doc in doctors %}
+            <div class="col-6">
+              <div class="doctor-card" onclick="selectDoctor({{ doc.id }}, this)">
+                <div class="doc-avatar">{{ doc.name.split()[1][0] if doc.name.split()|length > 1 else doc.name[0] }}</div>
+                <h6>{{ doc.name }}</h6>
+                <small><span class="online-dot"></span>{{ doc.specialty }}</small>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <form method="POST" action="{{ url_for('book_appointment') }}" id="bookingForm">
+          <input type="hidden" name="doctor_id" id="doctorIdInput" required />
+          <div class="mb-3">
+            <label class="form-label">Date</label>
+            <input type="date" name="date" class="form-control" required
+              min="{{ now.strftime('%Y-%m-%d') if now else '' }}" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Time</label>
+            <select name="time" class="form-select" required>
+              <option value="">Select time slot</option>
+              {% for h in range(9, 18) %}
+              <option value="{{ '%02d:00'|format(h) }}">{{ '%02d:00'|format(h) }} — {{ '%02d:00'|format(h+1) }}</option>
+              <option value="{{ '%02d:30'|format(h) }}">{{ '%02d:30'|format(h) }} — {{ '%02d:30'|format(h+1) }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Reason for Visit <span style="color:var(--text-muted)">(optional)</span></label>
+            <textarea name="reason" class="form-control" rows="2" placeholder="Briefly describe your concern..."></textarea>
+          </div>
+          <button type="submit" class="btn-book"><i class="fa fa-calendar-check me-2"></i>Confirm Booking</button>
+        </form>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Appointments List -->
+    <div class="col-lg-{% if current_user.role == 'patient' %}7{% else %}12{% endif %}">
+      <h5 style="font-weight:700; margin-bottom:1.2rem;">
+        {% if current_user.role == 'doctor' %}
+        <i class="fa fa-list me-2" style="color:#58a6ff"></i>Your Schedule
+        {% else %}
+        <i class="fa fa-list me-2" style="color:#58a6ff"></i>My Appointments
+        {% endif %}
+      </h5>
+
+      {% if my_appointments %}
+        {% for appt in my_appointments %}
+        {% set date_parts = appt.date.split('-') %}
+        <div class="appt-card">
+          <div class="appt-date-box">
+            <div class="day">{{ date_parts[2] if date_parts|length == 3 else appt.date }}</div>
+            <div class="month">
+              {% set months = ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'] %}
+              {{ months[date_parts[1]|int] if date_parts|length == 3 else '' }}
+            </div>
+          </div>
+          <div class="appt-info">
+            {% if current_user.role == 'patient' %}
+            <h6>{{ appt.doctor.name }} <small style="color:var(--text-muted); font-weight:400;">— {{ appt.doctor.specialty }}</small></h6>
+            {% else %}
+            <h6>{{ appt.patient.name }}</h6>
+            {% endif %}
+            <small><i class="fa fa-clock me-1"></i>{{ appt.time }}
+              {% if appt.reason %} · {{ appt.reason[:50] }}{% if appt.reason|length > 50 %}...{% endif %}{% endif %}
+            </small>
+          </div>
+          <span class="status-badge status-{{ appt.status }}">{{ appt.status.capitalize() }}</span>
+          {% if appt.status == 'scheduled' %}
+          <a href="{{ url_for('video_call', room_id=appt.room_id) }}" class="btn-join" target="_blank">
+            <i class="fa fa-video me-1"></i>Join Call
+          </a>
+          <form method="POST" action="{{ url_for('cancel_appointment', appt_id=appt.id) }}" style="display:inline;">
+            <button type="submit" class="btn-cancel" onclick="return confirm('Cancel this appointment?')">Cancel</button>
+          </form>
+          {% endif %}
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="empty-state">
+          <i class="fa fa-calendar-xmark d-block"></i>
+          <p>No appointments yet.</p>
+          {% if current_user.role == 'patient' %}
+          <p style="font-size:0.85rem;">Book your first appointment with a doctor using the form.</p>
+          {% endif %}
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  function selectDoctor(id, el) {
+    document.querySelectorAll('.doctor-card').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    document.getElementById('doctorIdInput').value = id;
+  }
+  // Set min date to today
+  const dateInput = document.querySelector('input[type="date"]');
+  if (dateInput) {
+    const today = new Date().toISOString().split('T')[0];
+    dateInput.min = today;
+    dateInput.value = today;
+  }
+</script>
+{% endblock %}
