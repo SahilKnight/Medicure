@@ -12,8 +12,11 @@ import requests
 from groq import Groq
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'pharmalane-secret-key-2024-change-in-production'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///pharmalane.db'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'pharmalane-dev-key-change-in-prod')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///pharmalane.db')
+# Fix postgres:// -> postgresql:// for SQLAlchemy compatibility
+if app.config['SQLALCHEMY_DATABASE_URI'].startswith('postgres://'):
+    app.config['SQLALCHEMY_DATABASE_URI'] = app.config['SQLALCHEMY_DATABASE_URI'].replace('postgres://', 'postgresql://', 1)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
@@ -44,6 +47,7 @@ class Appointment(db.Model):
     reason       = db.Column(db.String(300), nullable=True)
     status       = db.Column(db.String(20), default='scheduled')  # scheduled | completed | cancelled
     room_id      = db.Column(db.String(100), unique=True, nullable=False)
+    meet_link    = db.Column(db.String(200), nullable=True)   # unique Google Meet / video link
     created_at   = db.Column(db.DateTime, default=datetime.utcnow)
 
 @login_manager.user_loader
@@ -242,7 +246,12 @@ def parse_groq_response(raw):
                     result[key].append(clean)
     return result
 
-# ── Auth Routes ───────────────────────────────────────────────────────────────
+def generate_meet_link(room_id):
+    """
+    Returns a placeholder until doctor sets the real Google Meet link.
+    Doctor creates the meeting on meet.google.com/new and pastes the link back.
+    """
+    return None  # Will be set by doctor via /set-meet-link route
 
 @app.route('/')
 def landing():
@@ -354,11 +363,24 @@ def predict():
 @login_required
 def appointments():
     doctors = User.query.filter_by(role='doctor').all()
+    now = datetime.utcnow()
+    today_str = now.strftime('%Y-%m-%d')
     if current_user.role == 'doctor':
         my_appointments = Appointment.query.filter_by(doctor_id=current_user.id).order_by(Appointment.date, Appointment.time).all()
+        today_appointments = [a for a in my_appointments if a.date == today_str and a.status == 'scheduled']
+        upcoming = [a for a in my_appointments if a.date >= today_str and a.status == 'scheduled']
     else:
         my_appointments = Appointment.query.filter_by(patient_id=current_user.id).order_by(Appointment.date, Appointment.time).all()
-    return render_template('appointments.html', doctors=doctors, my_appointments=my_appointments)
+        today_appointments = []
+        upcoming = [a for a in my_appointments if a.date >= today_str and a.status == 'scheduled']
+    return render_template('appointments.html',
+        doctors=doctors,
+        my_appointments=my_appointments,
+        today_appointments=today_appointments,
+        upcoming=upcoming,
+        now=now,
+        today_str=today_str
+    )
 
 @app.route('/book-appointment', methods=['POST'])
 @login_required
@@ -378,21 +400,36 @@ def book_appointment():
         flash('That time slot is already booked. Please choose another.', 'warning')
         return redirect(url_for('appointments'))
 
-    room_id = f"pharmalane-{uuid.uuid4().hex[:12]}"
+    room_id   = f"pharmalane-{uuid.uuid4().hex[:16]}"
     appt = Appointment(
         patient_id=current_user.id,
         doctor_id=int(doctor_id),
         date=date,
         time=time,
         reason=reason,
-        room_id=room_id
+        room_id=room_id,
+        meet_link=None
     )
     db.session.add(appt)
     db.session.commit()
     flash('Appointment booked successfully!', 'success')
     return redirect(url_for('appointments'))
 
-@app.route('/cancel-appointment/<int:appt_id>', methods=['POST'])
+@app.route('/set-meet-link/<int:appt_id>', methods=['POST'])
+@login_required
+def set_meet_link(appt_id):
+    """Doctor saves the real Google Meet link for this appointment."""
+    appt = Appointment.query.get_or_404(appt_id)
+    if appt.doctor_id != current_user.id:
+        return jsonify({'error': 'Unauthorized'}), 403
+    link = request.json.get('link', '').strip()
+    if not link.startswith('https://meet.google.com/'):
+        return jsonify({'error': 'Invalid Google Meet link'}), 400
+    appt.meet_link = link
+    db.session.commit()
+    return jsonify({'ok': True, 'link': link})
+
+
 @login_required
 def cancel_appointment(appt_id):
     appt = Appointment.query.get_or_404(appt_id)
@@ -404,6 +441,51 @@ def cancel_appointment(appt_id):
     flash('Appointment cancelled.', 'info')
     return redirect(url_for('appointments'))
 
+@app.route('/complete-appointment/<int:appt_id>', methods=['POST'])
+@login_required
+def complete_appointment(appt_id):
+    appt = Appointment.query.get_or_404(appt_id)
+    if appt.doctor_id != current_user.id:
+        flash('Unauthorized.', 'danger')
+        return redirect(url_for('appointments'))
+    appt.status = 'completed'
+    db.session.commit()
+    flash('Appointment marked as completed.', 'success')
+    return redirect(url_for('appointments'))
+
+@app.route('/api/upcoming-appointments')
+@login_required
+def api_upcoming_appointments():
+    """Returns appointments starting within the next 30 minutes for notification popup."""
+    now = datetime.utcnow()
+    today_str = now.strftime('%Y-%m-%d')
+    current_time = now.strftime('%H:%M')
+
+    if current_user.role == 'patient':
+        appts = Appointment.query.filter_by(patient_id=current_user.id, status='scheduled').all()
+    else:
+        appts = Appointment.query.filter_by(doctor_id=current_user.id, status='scheduled').all()
+
+    alerts = []
+    for a in appts:
+        if a.date != today_str:
+            continue
+        try:
+            appt_dt = datetime.strptime(f"{a.date} {a.time}", '%Y-%m-%d %H:%M')
+            diff_minutes = (appt_dt - now).total_seconds() / 60
+            if 0 <= diff_minutes <= 30:
+                other = a.doctor.name if current_user.role == 'patient' else a.patient.name
+                alerts.append({
+                    'id': a.id,
+                    'time': a.time,
+                    'other': other,
+                    'minutes': int(diff_minutes),
+                    'room_id': a.room_id
+                })
+        except Exception:
+            pass
+    return jsonify(alerts)
+
 @app.route('/video-call/<room_id>')
 @login_required
 def video_call(room_id):
@@ -411,7 +493,8 @@ def video_call(room_id):
     if appt.patient_id != current_user.id and appt.doctor_id != current_user.id:
         flash('Unauthorized access to this call.', 'danger')
         return redirect(url_for('appointments'))
-    return render_template('video_call.html', room_id=room_id, appointment=appt)
+    is_doctor = (current_user.id == appt.doctor_id)
+    return render_template('video_call.html', room_id=room_id, appointment=appt, is_doctor=is_doctor)
 
 # ── Static Pages ──────────────────────────────────────────────────────────────
 

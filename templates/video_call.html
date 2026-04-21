@@ -1,87 +1,310 @@
 {% extends "base.html" %}
-{% block title %}Video Call — PharmaLane{% endblock %}
+{% block title %}Video Consultation — PharmaLane{% endblock %}
 
 {% block extra_css %}
 <style>
-  .call-wrapper {
-    min-height: calc(100vh - 70px);
-    display: flex;
-    flex-direction: column;
-    background: #0a0e13;
+  .call-page {
+    min-height: calc(100vh - 62px);
+    display: flex; align-items: center; justify-content: center;
+    background: radial-gradient(ellipse at 50% 30%, rgba(0,201,167,0.07) 0%, transparent 60%), var(--bg-dark);
+    padding: 2rem 1rem;
   }
-  .call-header {
-    background: var(--bg-card);
+  .call-card {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 20px; padding: 2.5rem;
+    width: 100%; max-width: 540px;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+  }
+  .session-header {
+    display: flex; align-items: center; gap: 14px;
+    padding-bottom: 1.5rem; margin-bottom: 1.5rem;
     border-bottom: 1px solid var(--border);
-    padding: 0.8rem 1.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 0.5rem;
   }
-  .call-info { display: flex; align-items: center; gap: 12px; }
-  .live-badge {
-    background: rgba(248,81,73,0.15);
-    border: 1px solid rgba(248,81,73,0.3);
-    color: #f85149;
-    border-radius: 20px;
-    padding: 0.2rem 0.7rem;
-    font-size: 0.75rem;
-    font-weight: 600;
-    display: flex; align-items: center; gap: 5px;
+  .session-avatar {
+    width: 52px; height: 52px; border-radius: 50%;
+    background: rgba(0,201,167,0.15); border: 2px solid rgba(0,201,167,0.3);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.3rem; font-weight: 700; color: var(--primary); flex-shrink: 0;
   }
-  .live-dot { width: 6px; height: 6px; background: #f85149; border-radius: 50%; animation: pulse 1.5s infinite; }
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
-  .call-info h6 { margin: 0; font-weight: 600; font-size: 0.95rem; }
-  .call-info small { color: var(--text-muted); font-size: 0.8rem; }
-  .jitsi-frame {
-    flex: 1;
-    width: 100%;
-    border: none;
-    min-height: calc(100vh - 130px);
+  .session-header h5 { margin: 0 0 0.2rem; font-weight: 700; font-size: 1rem; }
+  .session-header small { color: var(--text-muted); font-size: 0.8rem; }
+  .role-badge {
+    margin-left: auto; flex-shrink: 0;
+    background: rgba(0,201,167,0.1); border: 1px solid rgba(0,201,167,0.25);
+    color: var(--primary); border-radius: 20px; padding: 0.25rem 0.8rem;
+    font-size: 0.72rem; font-weight: 600;
   }
-  .btn-end-call {
-    background: #f85149;
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    padding: 0.5rem 1.2rem;
+  .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; margin-bottom: 1.5rem; }
+  .info-item {
+    background: var(--bg-card2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 0.8rem 1rem;
+  }
+  .info-item .lbl { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.2rem; }
+  .info-item .val { font-size: 0.9rem; font-weight: 600; }
+  .reason-box {
+    background: var(--bg-card2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 0.8rem 1rem; margin-bottom: 1.5rem;
+    font-size: 0.85rem; color: #c9d1d9; line-height: 1.5;
+  }
+  .reason-box .lbl { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.3rem; }
+
+  /* ── Doctor: no link yet ── */
+  .setup-box {
+    background: rgba(26,115,232,0.06); border: 1px solid rgba(26,115,232,0.2);
+    border-radius: 12px; padding: 1.3rem; margin-bottom: 1.2rem;
+  }
+  .setup-box h6 { font-weight: 700; color: #58a6ff; margin-bottom: 0.5rem; font-size: 0.9rem; }
+  .setup-box p { color: var(--text-muted); font-size: 0.83rem; line-height: 1.6; margin-bottom: 1rem; }
+  .step-row { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 0.7rem; font-size: 0.83rem; color: #c9d1d9; }
+  .step-num {
+    width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
+    background: rgba(26,115,232,0.2); color: #58a6ff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.72rem; font-weight: 700;
+  }
+  .link-input-row { display: flex; gap: 8px; margin-top: 1rem; }
+  .link-input {
+    flex: 1; background: var(--bg-card2) !important; border: 1px solid var(--border) !important;
+    color: #e6edf3 !important; border-radius: 8px; padding: 0.6rem 0.9rem;
     font-size: 0.85rem;
-    font-weight: 600;
-    text-decoration: none;
-    transition: all 0.2s;
   }
-  .btn-end-call:hover { background: #da3633; color: #fff; }
+  .link-input:focus { border-color: #1a73e8 !important; box-shadow: 0 0 0 3px rgba(26,115,232,0.15) !important; outline: none; }
+  .link-input::placeholder { color: #484f58; }
+  .btn-save-link {
+    background: #1a73e8; color: #fff; border: none; border-radius: 8px;
+    padding: 0.6rem 1.2rem; font-size: 0.85rem; font-weight: 600; cursor: pointer;
+    white-space: nowrap; transition: all 0.2s;
+  }
+  .btn-save-link:hover { background: #1557b0; }
+  .link-error { color: #f85149; font-size: 0.78rem; margin-top: 0.4rem; display: none; }
+
+  /* ── Meet link set ── */
+  .meet-link-box {
+    background: rgba(26,115,232,0.07); border: 1px solid rgba(26,115,232,0.25);
+    border-radius: 10px; padding: 0.9rem 1rem; margin-bottom: 1.2rem;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .meet-link-box .meet-icon { color: #1a73e8; font-size: 1.1rem; flex-shrink: 0; }
+  .meet-link-box span { font-size: 0.82rem; color: #58a6ff; word-break: break-all; flex: 1; }
+  .copy-btn { cursor: pointer; color: var(--text-muted); flex-shrink: 0; transition: color 0.2s; background: none; border: none; padding: 0; }
+  .copy-btn:hover { color: var(--primary); }
+
+  /* ── Patient waiting ── */
+  .waiting-box {
+    background: rgba(240,165,0,0.06); border: 1px solid rgba(240,165,0,0.2);
+    border-radius: 12px; padding: 1.2rem; margin-bottom: 1.2rem; text-align: center;
+  }
+  .waiting-box .wi { font-size: 2rem; margin-bottom: 0.5rem; }
+  .waiting-box h6 { font-weight: 700; color: #f0a500; margin-bottom: 0.3rem; }
+  .waiting-box p { color: var(--text-muted); font-size: 0.83rem; margin: 0; }
+  .dots span {
+    display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+    background: #f0a500; margin: 0 2px; animation: blink 1.4s infinite ease-in-out;
+  }
+  .dots span:nth-child(2) { animation-delay: 0.2s; }
+  .dots span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes blink { 0%,80%,100%{transform:scale(0.4);opacity:0.4} 40%{transform:scale(1);opacity:1} }
+
+  /* ── Buttons ── */
+  .btn-meet {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    background: #1a73e8; color: #fff; font-weight: 700; border: none;
+    border-radius: 10px; padding: 0.85rem 1.5rem; font-size: 0.95rem;
+    width: 100%; text-decoration: none; transition: all 0.2s; margin-bottom: 0.7rem;
+  }
+  .btn-meet:hover { background: #1557b0; color: #fff; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(26,115,232,0.35); }
+  .btn-create-meet {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    background: #1a73e8; color: #fff; font-weight: 700; border: none;
+    border-radius: 10px; padding: 0.85rem 1.5rem; font-size: 0.95rem;
+    width: 100%; text-decoration: none; transition: all 0.2s; margin-bottom: 0.8rem;
+  }
+  .btn-create-meet:hover { background: #1557b0; color: #fff; transform: translateY(-1px); }
+  .btn-secondary {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    background: var(--bg-card2); color: var(--text-muted); border: 1px solid var(--border);
+    border-radius: 10px; padding: 0.65rem 1.5rem; font-size: 0.88rem;
+    width: 100%; text-decoration: none; transition: all 0.2s; cursor: pointer;
+  }
+  .btn-secondary:hover { color: #e6edf3; border-color: #484f58; }
+
+  /* Toast */
+  .toast-msg {
+    position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%);
+    background: var(--bg-card); border: 1px solid rgba(0,201,167,0.3);
+    color: var(--primary); border-radius: 8px; padding: 0.6rem 1.5rem;
+    font-size: 0.85rem; font-weight: 600; z-index: 9999;
+    opacity: 0; transition: opacity 0.3s; pointer-events: none;
+  }
+  .toast-msg.show { opacity: 1; }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="call-wrapper">
-  <div class="call-header">
-    <div class="call-info">
-      <div class="live-badge"><span class="live-dot"></span>LIVE</div>
-      <div>
-        <h6>
-          {% if current_user.role == 'patient' %}
-            Consultation with {{ appointment.doctor.name }}
-          {% else %}
-            Patient: {{ appointment.patient.name }}
-          {% endif %}
-        </h6>
-        <small><i class="fa fa-calendar me-1"></i>{{ appointment.date }} at {{ appointment.time }}</small>
-      </div>
-    </div>
-    <div class="d-flex align-items-center gap-2">
-      <span style="font-size:0.78rem; color:var(--text-muted);"><i class="fa fa-lock me-1"></i>Encrypted</span>
-      <a href="{{ url_for('appointments') }}" class="btn-end-call"><i class="fa fa-phone-slash me-1"></i>End Call</a>
-    </div>
-  </div>
+<div class="call-page">
+  <div class="call-card">
 
-  <iframe
-    class="jitsi-frame"
-    src="https://meet.jit.si/{{ room_id }}#userInfo.displayName={{ current_user.name | urlencode }}&config.startWithAudioMuted=false&config.startWithVideoMuted=false&interfaceConfig.SHOW_JITSI_WATERMARK=false&interfaceConfig.TOOLBAR_BUTTONS=[%22microphone%22,%22camera%22,%22desktop%22,%22chat%22,%22raisehand%22,%22tileview%22,%22hangup%22]"
-    allow="camera; microphone; fullscreen; display-capture; autoplay"
-    allowfullscreen
-  ></iframe>
+    <!-- Header -->
+    <div class="session-header">
+      <div class="session-avatar">
+        {% if is_doctor %}{{ appointment.patient.name[0] }}
+        {% else %}{{ appointment.doctor.name.split()[1][0] if appointment.doctor.name.split()|length > 1 else appointment.doctor.name[0] }}{% endif %}
+      </div>
+      <div>
+        {% if is_doctor %}
+          <h5>{{ appointment.patient.name }}</h5>
+          <small>Patient Consultation</small>
+        {% else %}
+          <h5>{{ appointment.doctor.name }}</h5>
+          <small>{{ appointment.doctor.specialty }}</small>
+        {% endif %}
+      </div>
+      <span class="role-badge">
+        {% if is_doctor %}<i class="fa fa-user-md me-1"></i>Host{% else %}<i class="fa fa-user me-1"></i>Patient{% endif %}
+      </span>
+    </div>
+
+    <!-- Info grid -->
+    <div class="info-grid">
+      <div class="info-item"><div class="lbl">Date</div><div class="val">{{ appointment.date }}</div></div>
+      <div class="info-item"><div class="lbl">Time</div><div class="val">{{ appointment.time }}</div></div>
+      <div class="info-item"><div class="lbl">Status</div><div class="val" style="color:var(--primary)">{{ appointment.status.capitalize() }}</div></div>
+      <div class="info-item"><div class="lbl">Session</div><div class="val" style="font-size:0.75rem;color:var(--text-muted)">#{{ appointment.id }}</div></div>
+    </div>
+
+    {% if appointment.reason %}
+    <div class="reason-box"><div class="lbl">Reason for Visit</div>{{ appointment.reason }}</div>
+    {% endif %}
+
+    {# ═══════════════ DOCTOR VIEW ═══════════════ #}
+    {% if is_doctor %}
+
+      {% if not appointment.meet_link %}
+      <!-- Step 1: Doctor creates the meeting -->
+      <div class="setup-box">
+        <h6><i class="fa fa-video me-1"></i>Set Up Google Meet</h6>
+        <p>Create a new Google Meet for this session, then paste the link below to share it with your patient.</p>
+        <div class="step-row"><div class="step-num">1</div><span>Click "Create Google Meet" — a new meeting opens in a new tab</span></div>
+        <div class="step-row"><div class="step-num">2</div><span>Copy the meeting link from your browser address bar (e.g. <code style="color:#58a6ff;font-size:0.78rem">https://meet.google.com/abc-defg-hij</code>)</span></div>
+        <div class="step-row"><div class="step-num">3</div><span>Paste it below and click Save — your patient will see it instantly</span></div>
+        <div class="link-input-row">
+          <input type="text" class="link-input form-control" id="meetLinkInput" placeholder="https://meet.google.com/xxx-xxxx-xxx" />
+          <button class="btn-save-link" onclick="saveMeetLink()"><i class="fa fa-save me-1"></i>Save</button>
+        </div>
+        <div class="link-error" id="linkError">Please enter a valid Google Meet link (https://meet.google.com/...)</div>
+      </div>
+      <a href="https://meet.google.com/new" target="_blank" class="btn-create-meet">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M22 8.5L16 12L22 15.5V8.5Z" fill="#fff"/><rect x="2" y="7" width="13" height="10" rx="2" fill="#fff"/></svg>
+        Create Google Meet
+      </a>
+
+      {% else %}
+      <!-- Meet link already set -->
+      <div class="meet-link-box">
+        <span class="meet-icon"><i class="fa fa-video"></i></span>
+        <span id="meetLinkText">{{ appointment.meet_link }}</span>
+        <button class="copy-btn" onclick="copyLink()" title="Copy link"><i class="fa fa-copy"></i></button>
+      </div>
+      <a href="{{ appointment.meet_link }}" target="_blank" class="btn-meet">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M22 8.5L16 12L22 15.5V8.5Z" fill="#fff"/><rect x="2" y="7" width="13" height="10" rx="2" fill="#fff"/></svg>
+        Join Google Meet
+      </a>
+      <!-- Doctor can update the link -->
+      <div style="margin-bottom:0.8rem;">
+        <div class="link-input-row">
+          <input type="text" class="link-input form-control" id="meetLinkInput" placeholder="Update meet link..." value="{{ appointment.meet_link }}" />
+          <button class="btn-save-link" onclick="saveMeetLink()"><i class="fa fa-sync me-1"></i>Update</button>
+        </div>
+        <div class="link-error" id="linkError">Please enter a valid Google Meet link.</div>
+      </div>
+      {% endif %}
+
+    {# ═══════════════ PATIENT VIEW ═══════════════ #}
+    {% else %}
+
+      {% if not appointment.meet_link %}
+      <!-- Doctor hasn't set the link yet -->
+      <div class="waiting-box">
+        <div class="wi">⏳</div>
+        <h6>Waiting for Doctor to Set Up Meeting</h6>
+        <p>The doctor hasn't created the Google Meet link yet. Please check back closer to your appointment time.</p>
+        <div class="dots mt-2"><span></span><span></span><span></span></div>
+      </div>
+      <button class="btn-secondary" onclick="location.reload()"><i class="fa fa-rotate-right me-1"></i>Refresh to Check</button>
+
+      {% else %}
+      <!-- Link is ready -->
+      <div class="meet-link-box">
+        <span class="meet-icon"><i class="fa fa-video"></i></span>
+        <span id="meetLinkText">{{ appointment.meet_link }}</span>
+        <button class="copy-btn" onclick="copyLink()" title="Copy link"><i class="fa fa-copy"></i></button>
+      </div>
+      <div style="background:rgba(63,185,80,0.07);border:1px solid rgba(63,185,80,0.2);border-radius:10px;padding:0.9rem 1rem;margin-bottom:1.2rem;font-size:0.83rem;color:#c9d1d9;line-height:1.6;">
+        <strong style="color:#3fb950"><i class="fa fa-circle-check me-1"></i>Meeting is ready.</strong><br>
+        Click below to join. The doctor will admit you from the waiting room once the session starts.
+      </div>
+      <a href="{{ appointment.meet_link }}" target="_blank" class="btn-meet">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M22 8.5L16 12L22 15.5V8.5Z" fill="#fff"/><rect x="2" y="7" width="13" height="10" rx="2" fill="#fff"/></svg>
+        Join Google Meet
+      </a>
+      {% endif %}
+
+    {% endif %}
+
+    <a href="{{ url_for('appointments') }}" class="btn-secondary mt-1"><i class="fa fa-arrow-left me-1"></i>Back to Appointments</a>
+
+  </div>
 </div>
+
+<div class="toast-msg" id="toast"></div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  const APPT_ID = {{ appointment.id }};
+
+  function showToast(msg, color) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.style.borderColor = color || 'rgba(0,201,167,0.3)';
+    t.style.color = color ? color : 'var(--primary)';
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  function saveMeetLink() {
+    const input = document.getElementById('meetLinkInput');
+    const link  = input.value.trim();
+    const err   = document.getElementById('linkError');
+    if (!link.startsWith('https://meet.google.com/')) {
+      err.style.display = 'block'; return;
+    }
+    err.style.display = 'none';
+    fetch(`/set-meet-link/${APPT_ID}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ link })
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.ok) {
+        showToast('✓ Meeting link saved! Patient can now join.', '#3fb950');
+        setTimeout(() => location.reload(), 1200);
+      } else {
+        showToast(data.error || 'Error saving link.', '#f85149');
+      }
+    })
+    .catch(() => showToast('Network error. Try again.', '#f85149'));
+  }
+
+  function copyLink() {
+    const link = document.getElementById('meetLinkText').textContent.trim();
+    navigator.clipboard.writeText(link).then(() => showToast('✓ Link copied!'));
+  }
+
+  // Patient: auto-refresh every 30s to check if doctor set the link
+  {% if not is_doctor and not appointment.meet_link %}
+  setTimeout(() => location.reload(), 30000);
+  {% endif %}
+</script>
 {% endblock %}
