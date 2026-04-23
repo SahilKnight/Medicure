@@ -32,8 +32,9 @@ class User(db.Model, UserMixin):
     name = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(200), nullable=False)
-    role = db.Column(db.String(20), default='patient')   # patient | doctor
-    specialty = db.Column(db.String(100), nullable=True) # for doctors
+    role = db.Column(db.String(20), default='patient')
+    specialty = db.Column(db.String(100), nullable=True)
+    profile_image = db.Column(db.String(300), nullable=True)  # URL to doctor photo
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     appointments_as_patient = db.relationship('Appointment', foreign_keys='Appointment.patient_id', backref='patient', lazy=True)
     appointments_as_doctor  = db.relationship('Appointment', foreign_keys='Appointment.doctor_id',  backref='doctor',  lazy=True)
@@ -273,8 +274,10 @@ def register():
             return redirect(url_for('register'))
 
         hashed_pw = bcrypt.generate_password_hash(password).decode('utf-8')
+        profile_image = request.form.get('profile_image', '').strip() or None
         user = User(name=name, email=email, password=hashed_pw, role=role,
-                    specialty=specialty if role == 'doctor' else None)
+                    specialty=specialty if role == 'doctor' else None,
+                    profile_image=profile_image if role == 'doctor' else None)
         db.session.add(user)
         db.session.commit()
         flash('Account created! Please login.', 'success')
@@ -430,6 +433,7 @@ def set_meet_link(appt_id):
     return jsonify({'ok': True, 'link': link})
 
 
+@app.route('/cancel-appointment/<int:appt_id>', methods=['POST'])
 @login_required
 def cancel_appointment(appt_id):
     appt = Appointment.query.get_or_404(appt_id)
@@ -515,15 +519,15 @@ with app.app_context():
     # Seed demo doctors if none exist
     if not User.query.filter_by(role='doctor').first():
         demo_doctors = [
-            ('Dr. Arjun Mehta',    'arjun@pharmalane.com',    'Cardiologist'),
-            ('Dr. Priya Sharma',   'priya@pharmalane.com',    'Neurologist'),
-            ('Dr. Rahul Verma',    'rahul@pharmalane.com',    'General Physician'),
-            ('Dr. Sneha Kapoor',   'sneha@pharmalane.com',    'Dermatologist'),
-            ('Dr. Vikram Singh',   'vikram@pharmalane.com',   'Orthopedist'),
+            ('Dr. Arjun Mehta',  'arjun@pharmalane.com',  'Cardiologist',     'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=200&h=200&fit=crop&crop=face'),
+            ('Dr. Priya Sharma', 'priya@pharmalane.com',  'Neurologist',      'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=200&h=200&fit=crop&crop=face'),
+            ('Dr. Rahul Verma',  'rahul@pharmalane.com',  'General Physician','https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=200&h=200&fit=crop&crop=face'),
+            ('Dr. Sneha Kapoor', 'sneha@pharmalane.com',  'Dermatologist',    'https://images.unsplash.com/photo-1594824476967-48c8b964273f?w=200&h=200&fit=crop&crop=face'),
+            ('Dr. Vikram Singh', 'vikram@pharmalane.com', 'Orthopedist',      'https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=200&h=200&fit=crop&crop=face'),
         ]
-        for name, email, spec in demo_doctors:
+        for name, email, spec, photo in demo_doctors:
             pw = bcrypt.generate_password_hash('doctor123').decode('utf-8')
-            db.session.add(User(name=name, email=email, password=pw, role='doctor', specialty=spec))
+            db.session.add(User(name=name, email=email, password=pw, role='doctor', specialty=spec, profile_image=photo))
         db.session.commit()
 
 if __name__ == '__main__':
