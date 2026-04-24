@@ -92,8 +92,8 @@
 
     <div class="pay-header">
       <div class="icon"><i class="fa fa-shield-halved"></i></div>
-      <h4>Complete Payment</h4>
-      <p>Secure payment to confirm your appointment</p>
+      <h4 data-i18n="pay.title">Complete Payment</h4>
+      <p data-i18n="pay.subtitle">Secure payment to confirm your appointment</p>
     </div>
 
     {% if key_id and key_id.startswith('rzp_test') %}
@@ -105,19 +105,19 @@
     <!-- Appointment Summary -->
     <div class="summary-box">
       <div class="summary-row">
-        <span class="lbl">Doctor</span>
+        <span class="lbl" data-i18n="pay.doctor">Doctor</span>
         <span class="val">{{ appt.doctor.name }}</span>
       </div>
       <div class="summary-row">
-        <span class="lbl">Specialty</span>
+        <span class="lbl" data-i18n="pay.specialty">Specialty</span>
         <span class="val">{{ appt.doctor.specialty }}</span>
       </div>
       <div class="summary-row">
-        <span class="lbl">Date</span>
+        <span class="lbl" data-i18n="pay.date">Date</span>
         <span class="val">{{ appt.date }}</span>
       </div>
       <div class="summary-row">
-        <span class="lbl">Time</span>
+        <span class="lbl" data-i18n="pay.time">Time</span>
         <span class="val">{{ appt.time }}</span>
       </div>
       {% if appt.reason %}
@@ -130,14 +130,14 @@
 
     <!-- Amount -->
     <div class="amount-row">
-      <span class="lbl"><i class="fa fa-indian-rupee-sign me-1"></i>Consultation Fee</span>
+      <span class="lbl"><i class="fa fa-indian-rupee-sign me-1"></i><span data-i18n="pay.fee">Consultation Fee</span></span>
       <span class="val">₹{{ (amount / 100) | int }}</span>
     </div>
 
     {% if order %}
     <!-- Razorpay Payment Button -->
     <button class="btn-pay" id="payBtn" onclick="openRazorpay()">
-      <i class="fa fa-lock me-2"></i>Pay ₹{{ (amount / 100) | int }} Securely
+      <i class="fa fa-lock me-2"></i><span data-i18n="pay.btn">Pay ₹{{ (amount / 100) | int }} Securely</span>
     </button>
 
     <!-- Hidden form to submit payment verification -->
@@ -159,11 +159,11 @@
 
     <a href="{{ url_for('payment_cancel', appt_id=appt.id) }}" class="btn-cancel-pay"
        onclick="return confirm('Cancel this booking?')">
-      <i class="fa fa-times me-1"></i>Cancel Booking
+      <i class="fa fa-times me-1"></i><span data-i18n="pay.cancel">Cancel Booking</span>
     </a>
 
     <div class="secure-note">
-      <i class="fa fa-lock"></i> 256-bit SSL encrypted · Powered by Razorpay
+      <i class="fa fa-lock"></i> <span data-i18n="pay.secure">256-bit SSL encrypted · Powered by Razorpay</span>
     </div>
     <div class="payment-methods">
       <span class="pm-badge">💳 Cards</span>

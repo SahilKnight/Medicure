@@ -166,8 +166,8 @@
 {% block content %}
 <div class="dashboard-hero">
   <div class="container">
-    <h1><i class="fa fa-stethoscope me-2" style="color:var(--primary)"></i>Symptom Checker</h1>
-    <p>Enter your symptoms below to get an AI-powered disease prediction and personalized recommendations.</p>
+    <h1><i class="fa fa-stethoscope me-2" style="color:var(--primary)"></i><span data-i18n="dash.title">Symptom Checker</span></h1>
+    <p data-i18n="dash.subtitle">Enter your symptoms below to get an AI-powered disease prediction and personalized recommendations.</p>
   </div>
 </div>
 
@@ -177,7 +177,7 @@
     <div class="col-lg-8">
       <div class="symptom-box">
         <form method="POST" action="{{ url_for('predict') }}" id="predictForm">
-          <label style="font-weight:600; margin-bottom:0.8rem; display:block;">Enter Symptoms <span style="color:var(--text-muted); font-weight:400; font-size:0.82rem;">(comma-separated)</span></label>
+          <label style="font-weight:600; margin-bottom:0.8rem; display:block;" data-i18n="dash.label">Enter Symptoms <span style="color:var(--text-muted); font-weight:400; font-size:0.82rem;" data-i18n="dash.hint">(comma-separated)</span></label>
           <div class="symptom-input-wrap">
             <input type="text" id="symptomInput" placeholder="e.g. headache, fever, fatigue..." autocomplete="off" />
             <div class="autocomplete-list" id="autocompleteList"></div>
@@ -193,14 +193,14 @@
           {% if message %}
           <div class="alert alert-warning mt-3 py-2" style="font-size:0.85rem;">{{ message }}</div>
           {% endif %}
-          <button type="submit" class="btn-predict"><i class="fa fa-search me-2"></i>Analyze Symptoms</button>
+          <button type="submit" class="btn-predict"><i class="fa fa-search me-2"></i><span data-i18n="dash.analyze">Analyze Symptoms</span></button>
         </form>
       </div>
 
       {% if predicted_disease %}
       <div class="results-section">
         <h4 class="mb-3" style="font-weight:700;">
-          <i class="fa fa-chart-line me-2" style="color:var(--primary)"></i>Analysis Results
+          <i class="fa fa-chart-line me-2" style="color:var(--primary)"></i><span data-i18n="dash.results">Analysis Results</span>
           {% if ai_powered %}
           <span style="font-size:0.72rem; background:rgba(88,166,255,0.12); border:1px solid rgba(88,166,255,0.25); color:#58a6ff; border-radius:20px; padding:0.2rem 0.7rem; font-weight:500; vertical-align:middle; margin-left:8px;">
             <i class="fa fa-brain me-1"></i>LLaMA3-70B AI
@@ -216,7 +216,7 @@
         <div class="result-card">
           <div class="result-card-header">
             <div class="result-icon" style="background:rgba(0,201,167,0.12); color:var(--primary)"><i class="fa fa-virus"></i></div>
-            <h5>Predicted Disease</h5>
+            <h5 data-i18n="dash.predicted">Predicted Disease</h5>
             <span class="ms-auto status-badge status-{{ severity|lower }}" style="font-size:0.72rem;">{{ severity }}</span>
           </div>
           <div class="disease-badge mb-3">{{ predicted_disease }}</div>
@@ -229,7 +229,7 @@
         <div class="result-card">
           <div class="result-card-header">
             <div class="result-icon" style="background:rgba(240,165,0,0.12); color:#f0a500"><i class="fa fa-shield-halved"></i></div>
-            <h5>Precautions</h5>
+            <h5 data-i18n="dash.precautions">Precautions</h5>
           </div>
           {% for p in my_precautions %}
           <div class="list-item">
@@ -243,7 +243,7 @@
         <div class="result-card">
           <div class="result-card-header">
             <div class="result-icon" style="background:rgba(63,185,80,0.12); color:#3fb950"><i class="fa fa-pills"></i></div>
-            <h5>Recommended Medications</h5>
+            <h5 data-i18n="dash.medications">Recommended Medications</h5>
           </div>
           {% for m in medications %}
           <div class="med-item">
@@ -262,7 +262,7 @@
             <div class="result-card h-100">
               <div class="result-card-header">
                 <div class="result-icon" style="background:rgba(0,201,167,0.12); color:var(--primary)"><i class="fa fa-apple-whole"></i></div>
-                <h5>Diet Plan</h5>
+                <h5 data-i18n="dash.diet">Diet Plan</h5>
               </div>
               {% for d in my_diet %}
               <div class="list-item">
@@ -276,7 +276,7 @@
             <div class="result-card h-100">
               <div class="result-card-header">
                 <div class="result-icon" style="background:rgba(88,166,255,0.12); color:#58a6ff"><i class="fa fa-dumbbell"></i></div>
-                <h5>Workout Recommendations</h5>
+                <h5 data-i18n="dash.workout">Workout Recommendations</h5>
               </div>
               {% for w in workout %}
               <div class="list-item">
@@ -303,10 +303,10 @@
         <div class="result-card mt-1" style="background:linear-gradient(135deg,rgba(0,201,167,0.08),rgba(88,166,255,0.05)); border-color:rgba(0,201,167,0.2);">
           <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
             <div>
-              <h5 style="margin:0 0 0.3rem;"><i class="fa fa-video me-2" style="color:var(--primary)"></i>Want to consult a doctor?</h5>
-              <p style="color:var(--text-muted); font-size:0.85rem; margin:0;">Book a video appointment with a specialist for {{ predicted_disease }}.</p>
+              <h5 style="margin:0 0 0.3rem;"><i class="fa fa-video me-2" style="color:var(--primary)"></i><span data-i18n="dash.consult">Want to consult a doctor?</span></h5>
+              <p style="color:var(--text-muted); font-size:0.85rem; margin:0;" data-i18n="dash.consult_sub">Book a video appointment with a specialist.</p>
             </div>
-            <a href="{{ url_for('appointments') }}" class="btn btn-primary-custom"><i class="fa fa-calendar-plus me-1"></i>Book Now</a>
+            <a href="{{ url_for('appointments') }}" class="btn btn-primary-custom"><i class="fa fa-calendar-plus me-1"></i><span data-i18n="dash.book_now">Book Now</span></a>
           </div>
         </div>
       </div>

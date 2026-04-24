@@ -195,22 +195,22 @@
   <div class="container">
     <div class="row align-items-center g-5">
       <div class="col-lg-6 hero-content">
-        <div class="hero-tag"><span class="dot"></span> AI-Powered Healthcare Platform</div>
-        <h1>Your Personal <span class="highlight">Medical AI</span> Assistant</h1>
-        <p class="lead">Enter your symptoms and get instant disease predictions, personalized medicine recommendations, diet plans, and connect with real doctors via video call.</p>
+        <div class="hero-tag"><span class="dot"></span> <span data-i18n="hero.tag">AI-Powered Healthcare Platform</span></div>
+        <h1 data-i18n="hero.title">Your Personal <span class='highlight'>Medical AI</span> Assistant</h1>
+        <p class="lead" data-i18n="hero.lead">Enter your symptoms and get instant disease predictions, personalized medicine recommendations, diet plans, and connect with real doctors via video call.</p>
         <div class="hero-btns">
           {% if current_user.is_authenticated %}
-            <a href="{{ url_for('dashboard') }}" class="btn btn-primary-custom btn-lg"><i class="fa fa-stethoscope me-2"></i>Check Symptoms</a>
-            <a href="{{ url_for('appointments') }}" class="btn btn-outline-custom btn-lg"><i class="fa fa-calendar me-2"></i>Book Appointment</a>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-primary-custom btn-lg"><i class="fa fa-stethoscope me-2"></i><span data-i18n="hero.btn_symptoms">Check Symptoms</span></a>
+            <a href="{{ url_for('appointments') }}" class="btn btn-outline-custom btn-lg"><i class="fa fa-calendar me-2"></i><span data-i18n="hero.btn_appointment">Book Appointment</span></a>
           {% else %}
-            <a href="{{ url_for('register') }}" class="btn btn-primary-custom btn-lg"><i class="fa fa-rocket me-2"></i>Get Started Free</a>
-            <a href="{{ url_for('login') }}" class="btn btn-outline-custom btn-lg">Login</a>
+            <a href="{{ url_for('register') }}" class="btn btn-primary-custom btn-lg"><i class="fa fa-rocket me-2"></i><span data-i18n="hero.btn_start">Get Started Free</span></a>
+            <a href="{{ url_for('login') }}" class="btn btn-outline-custom btn-lg" data-i18n="hero.btn_login">Login</a>
           {% endif %}
         </div>
         <div class="hero-stats">
-          <div class="stat-item"><h3>41+</h3><p>Diseases Detected</p></div>
-          <div class="stat-item"><h3>132</h3><p>Symptoms Analyzed</p></div>
-          <div class="stat-item"><h3>94%</h3><p>Accuracy Rate</p></div>
+          <div class="stat-item"><h3>41+</h3><p data-i18n="hero.stat1">Diseases Detected</p></div>
+          <div class="stat-item"><h3>132</h3><p data-i18n="hero.stat2">Symptoms Analyzed</p></div>
+          <div class="stat-item"><h3>94%</h3><p data-i18n="hero.stat3">Accuracy Rate</p></div>
         </div>
       </div>
       <div class="col-lg-6 hero-visual">
@@ -246,53 +246,17 @@
 <section class="features">
   <div class="container">
     <div class="text-center mb-5">
-      <span class="section-badge">Features</span>
-      <h2 class="mt-3" style="font-size:2rem; font-weight:700;">Everything you need for better health</h2>
-      <p style="color:var(--text-muted); max-width:500px; margin:0.8rem auto 0;">A complete healthcare platform powered by machine learning and real doctors.</p>
+      <span class="section-badge" data-i18n="features.badge">Features</span>
+      <h2 class="mt-3" style="font-size:2rem; font-weight:700;" data-i18n="features.title">Everything you need for better health</h2>
+      <p style="color:var(--text-muted); max-width:500px; margin:0.8rem auto 0;" data-i18n="features.subtitle">A complete healthcare platform powered by machine learning and real doctors.</p>
     </div>
     <div class="row g-4">
-      <div class="col-md-6 col-lg-4">
-        <div class="feature-card">
-          <div class="feature-icon"><i class="fa fa-brain"></i></div>
-          <h5>AI Symptom Analysis</h5>
-          <p>Our ML model trained on thousands of cases predicts diseases from your symptoms with high accuracy using SVM classification.</p>
-        </div>
-      </div>
-      <div class="col-md-6 col-lg-4">
-        <div class="feature-card">
-          <div class="feature-icon"><i class="fa fa-pills"></i></div>
-          <h5>Medicine Recommendations</h5>
-          <p>Get personalized medication suggestions, dosage guidance, and precautions tailored to your predicted condition.</p>
-        </div>
-      </div>
-      <div class="col-md-6 col-lg-4">
-        <div class="feature-card">
-          <div class="feature-icon"><i class="fa fa-video"></i></div>
-          <h5>Video Consultations</h5>
-          <p>Book appointments with certified doctors and join secure video calls directly in the app — no third-party software needed.</p>
-        </div>
-      </div>
-      <div class="col-md-6 col-lg-4">
-        <div class="feature-card">
-          <div class="feature-icon"><i class="fa fa-salad"></i></div>
-          <h5>Diet & Workout Plans</h5>
-          <p>Receive disease-specific diet recommendations and workout routines to support your recovery and overall wellness.</p>
-        </div>
-      </div>
-      <div class="col-md-6 col-lg-4">
-        <div class="feature-card">
-          <div class="feature-icon"><i class="fa fa-calendar-check"></i></div>
-          <h5>Smart Scheduling</h5>
-          <p>Book, manage, and track doctor appointments with conflict detection. Get unique video call rooms for each session.</p>
-        </div>
-      </div>
-      <div class="col-md-6 col-lg-4">
-        <div class="feature-card">
-          <div class="feature-icon"><i class="fa fa-shield-halved"></i></div>
-          <h5>Privacy First</h5>
-          <p>Your health data is encrypted and stored securely. We follow industry-standard security practices to protect your information.</p>
-        </div>
-      </div>
+      <div class="col-md-6 col-lg-4"><div class="feature-card"><div class="feature-icon"><i class="fa fa-brain"></i></div><h5 data-i18n="features.f1_title">AI Symptom Analysis</h5><p data-i18n="features.f1_desc">Our ML model trained on thousands of cases predicts diseases from your symptoms with high accuracy using SVM classification.</p></div></div>
+      <div class="col-md-6 col-lg-4"><div class="feature-card"><div class="feature-icon"><i class="fa fa-pills"></i></div><h5 data-i18n="features.f2_title">Medicine Recommendations</h5><p data-i18n="features.f2_desc">Get personalized medication suggestions, dosage guidance, and precautions tailored to your predicted condition.</p></div></div>
+      <div class="col-md-6 col-lg-4"><div class="feature-card"><div class="feature-icon"><i class="fa fa-video"></i></div><h5 data-i18n="features.f3_title">Video Consultations</h5><p data-i18n="features.f3_desc">Book appointments with certified doctors and join secure video calls directly in the app.</p></div></div>
+      <div class="col-md-6 col-lg-4"><div class="feature-card"><div class="feature-icon"><i class="fa fa-salad"></i></div><h5 data-i18n="features.f4_title">Diet &amp; Workout Plans</h5><p data-i18n="features.f4_desc">Receive disease-specific diet recommendations and workout routines to support your recovery.</p></div></div>
+      <div class="col-md-6 col-lg-4"><div class="feature-card"><div class="feature-icon"><i class="fa fa-calendar-check"></i></div><h5 data-i18n="features.f5_title">Smart Scheduling</h5><p data-i18n="features.f5_desc">Book, manage, and track doctor appointments with conflict detection.</p></div></div>
+      <div class="col-md-6 col-lg-4"><div class="feature-card"><div class="feature-icon"><i class="fa fa-shield-halved"></i></div><h5 data-i18n="features.f6_title">Privacy First</h5><p data-i18n="features.f6_desc">Your health data is encrypted and stored securely following industry-standard practices.</p></div></div>
     </div>
   </div>
 </section>
@@ -301,27 +265,15 @@
 <section class="how-it-works">
   <div class="container">
     <div class="text-center mb-5">
-      <span class="section-badge">How It Works</span>
-      <h2 class="mt-3" style="font-size:2rem; font-weight:700;">Get results in 3 simple steps</h2>
+      <span class="section-badge" data-i18n="how.badge">How It Works</span>
+      <h2 class="mt-3" style="font-size:2rem; font-weight:700;" data-i18n="how.title">Get results in 3 simple steps</h2>
     </div>
     <div class="row align-items-start">
-      <div class="col-md-3 step-card">
-        <div class="step-number">1</div>
-        <h5>Create Account</h5>
-        <p>Sign up for free in seconds. No credit card required.</p>
-      </div>
+      <div class="col-md-3 step-card"><div class="step-number">1</div><h5 data-i18n="how.s1_title">Create Account</h5><p data-i18n="how.s1_desc">Sign up for free in seconds. No credit card required.</p></div>
       <div class="col-md-1 step-connector d-none d-md-flex"><i class="fa fa-arrow-right"></i></div>
-      <div class="col-md-3 step-card">
-        <div class="step-number">2</div>
-        <h5>Enter Symptoms</h5>
-        <p>Type your symptoms or use voice input. Our AI analyzes them instantly.</p>
-      </div>
+      <div class="col-md-3 step-card"><div class="step-number">2</div><h5 data-i18n="how.s2_title">Enter Symptoms</h5><p data-i18n="how.s2_desc">Type your symptoms or use voice input. Our AI analyzes them instantly.</p></div>
       <div class="col-md-1 step-connector d-none d-md-flex"><i class="fa fa-arrow-right"></i></div>
-      <div class="col-md-3 step-card">
-        <div class="step-number">3</div>
-        <h5>Get Recommendations</h5>
-        <p>Receive disease prediction, medicines, diet plan, and book a doctor if needed.</p>
-      </div>
+      <div class="col-md-3 step-card"><div class="step-number">3</div><h5 data-i18n="how.s3_title">Get Recommendations</h5><p data-i18n="how.s3_desc">Receive disease prediction, medicines, diet plan, and book a doctor if needed.</p></div>
     </div>
   </div>
 </section>
@@ -330,8 +282,8 @@
 <section class="testimonials">
   <div class="container">
     <div class="text-center mb-5">
-      <span class="section-badge">Trusted By Experts</span>
-      <h2 class="mt-3" style="font-size:2rem; font-weight:700;">What doctors say</h2>
+      <span class="section-badge" data-i18n="test.badge">Trusted By Experts</span>
+      <h2 class="mt-3" style="font-size:2rem; font-weight:700;" data-i18n="test.title">What doctors say</h2>
     </div>
     <div class="row g-4">
       <div class="col-md-4">
@@ -371,12 +323,12 @@
 <!-- CTA -->
 <section class="cta-section">
   <div class="container">
-    <h2>Ready to take control of your health?</h2>
-    <p>Join thousands of users who trust PharmaLane for smarter healthcare decisions.</p>
+    <h2 data-i18n="cta.title">Ready to take control of your health?</h2>
+    <p data-i18n="cta.subtitle">Join thousands of users who trust PharmaLane for smarter healthcare decisions.</p>
     {% if current_user.is_authenticated %}
-      <a href="{{ url_for('dashboard') }}" class="btn btn-primary-custom btn-lg px-5"><i class="fa fa-stethoscope me-2"></i>Go to Dashboard</a>
+      <a href="{{ url_for('dashboard') }}" class="btn btn-primary-custom btn-lg px-5"><i class="fa fa-stethoscope me-2"></i><span data-i18n="cta.btn_dashboard">Go to Dashboard</span></a>
     {% else %}
-      <a href="{{ url_for('register') }}" class="btn btn-primary-custom btn-lg px-5"><i class="fa fa-rocket me-2"></i>Get Started — It's Free</a>
+      <a href="{{ url_for('register') }}" class="btn btn-primary-custom btn-lg px-5"><i class="fa fa-rocket me-2"></i><span data-i18n="cta.btn_start">Get Started — It's Free</span></a>
     {% endif %}
   </div>
 </section>

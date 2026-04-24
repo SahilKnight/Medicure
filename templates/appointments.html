@@ -105,8 +105,8 @@
 {% block content %}
 <div class="page-hero">
   <div class="container">
-    <h1><i class="fa fa-calendar-check me-2" style="color:#58a6ff"></i>Appointments</h1>
-    <p>Book video consultations with certified doctors and manage your schedule.</p>
+    <h1><i class="fa fa-calendar-check me-2" style="color:#58a6ff"></i><span data-i18n="appt.title">Appointments</span></h1>
+    <p data-i18n="appt.subtitle">Book video consultations with certified doctors and manage your schedule.</p>
   </div>
 </div>
 
@@ -117,11 +117,11 @@
     {% if current_user.role == 'patient' %}
     <div class="col-lg-5">
       <div class="booking-card">
-        <h5 style="font-weight:700; margin-bottom:1.5rem;"><i class="fa fa-calendar-plus me-2" style="color:var(--primary)"></i>Book Appointment</h5>
+        <h5 style="font-weight:700; margin-bottom:1.5rem;"><i class="fa fa-calendar-plus me-2" style="color:var(--primary)"></i><span data-i18n="appt.book_title">Book Appointment</span></h5>
 
         <!-- Doctor selection -->
         <div class="mb-3">
-          <label class="form-label">Select Doctor</label>
+          <label class="form-label" data-i18n="appt.select_doctor">Select Doctor</label>
           <div class="row g-2" id="doctorGrid">
             {% for doc in doctors %}
             <div class="col-6">
@@ -138,14 +138,14 @@
         <form method="POST" action="{{ url_for('book_appointment') }}" id="bookingForm">
           <input type="hidden" name="doctor_id" id="doctorIdInput" required />
           <div class="mb-3">
-            <label class="form-label">Date</label>
+            <label class="form-label" data-i18n="appt.date">Date</label>
             <input type="date" name="date" class="form-control" required
               min="{{ now.strftime('%Y-%m-%d') if now else '' }}" />
           </div>
           <div class="mb-3">
-            <label class="form-label">Time</label>
+            <label class="form-label" data-i18n="appt.time">Time</label>
             <select name="time" class="form-select" required>
-              <option value="">Select time slot</option>
+              <option value="" data-i18n="appt.select_time">Select time slot</option>
               {% for h in range(9, 18) %}
               <option value="{{ '%02d:00'|format(h) }}">{{ '%02d:00'|format(h) }} — {{ '%02d:00'|format(h+1) }}</option>
               <option value="{{ '%02d:30'|format(h) }}">{{ '%02d:30'|format(h) }} — {{ '%02d:30'|format(h+1) }}</option>
@@ -153,10 +153,10 @@
             </select>
           </div>
           <div class="mb-3">
-            <label class="form-label">Reason for Visit <span style="color:var(--text-muted)">(optional)</span></label>
+            <label class="form-label"><span data-i18n="appt.reason">Reason for Visit</span> <span style="color:var(--text-muted)" data-i18n="appt.reason_opt">(optional)</span></label>
             <textarea name="reason" class="form-control" rows="2" placeholder="Briefly describe your concern..."></textarea>
           </div>
-          <button type="submit" class="btn-book"><i class="fa fa-calendar-check me-2"></i>Confirm Booking</button>
+          <button type="submit" class="btn-book"><i class="fa fa-calendar-check me-2"></i><span data-i18n="appt.confirm">Confirm Booking</span></button>
         </form>
       </div>
     </div>
@@ -212,9 +212,9 @@
       {% else %}
         <div class="empty-state">
           <i class="fa fa-calendar-xmark d-block"></i>
-          <p>No appointments yet.</p>
+          <p data-i18n="appt.empty">No appointments yet.</p>
           {% if current_user.role == 'patient' %}
-          <p style="font-size:0.85rem;">Book your first appointment with a doctor using the form.</p>
+          <p style="font-size:0.85rem;" data-i18n="appt.empty_sub">Book your first appointment with a doctor using the form.</p>
           {% endif %}
         </div>
       {% endif %}
