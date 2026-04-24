@@ -16,11 +16,18 @@ import hashlib
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'pharmalane-dev-key-change-in-prod')
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///pharmalane.db')
-# Fix postgres:// -> postgresql:// for SQLAlchemy compatibility
-if app.config['SQLALCHEMY_DATABASE_URI'].startswith('postgres://'):
-    app.config['SQLALCHEMY_DATABASE_URI'] = app.config['SQLALCHEMY_DATABASE_URI'].replace('postgres://', 'postgresql://', 1)
+
+# Use PostgreSQL in production (Railway/Vercel), SQLite locally
+_db_url = os.environ.get('DATABASE_URL', 'sqlite:///pharmalane.db')
+# Fix postgres:// -> postgresql:// for SQLAlchemy
+if _db_url.startswith('postgres://'):
+    _db_url = _db_url.replace('postgres://', 'postgresql://', 1)
+app.config['SQLALCHEMY_DATABASE_URI'] = _db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    'pool_pre_ping': True,
+    'pool_recycle': 300,
+}
 
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
