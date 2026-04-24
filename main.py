@@ -10,6 +10,9 @@ import uuid
 import os
 import requests
 from groq import Groq
+import razorpay
+import hmac
+import hashlib
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'pharmalane-dev-key-change-in-prod')
@@ -41,15 +44,20 @@ class User(db.Model, UserMixin):
 
 class Appointment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    patient_id   = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    doctor_id    = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    date         = db.Column(db.String(20), nullable=False)
-    time         = db.Column(db.String(10), nullable=False)
-    reason       = db.Column(db.String(300), nullable=True)
-    status       = db.Column(db.String(20), default='scheduled')  # scheduled | completed | cancelled
-    room_id      = db.Column(db.String(100), unique=True, nullable=False)
-    meet_link    = db.Column(db.String(200), nullable=True)   # unique Google Meet / video link
-    created_at   = db.Column(db.DateTime, default=datetime.utcnow)
+    patient_id      = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    doctor_id       = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    date            = db.Column(db.String(20), nullable=False)
+    time            = db.Column(db.String(10), nullable=False)
+    reason          = db.Column(db.String(300), nullable=True)
+    status          = db.Column(db.String(20), default='pending_payment')  # pending_payment | scheduled | completed | cancelled
+    room_id         = db.Column(db.String(100), unique=True, nullable=False)
+    meet_link       = db.Column(db.String(200), nullable=True)
+    # Payment fields
+    payment_status  = db.Column(db.String(20), default='pending')   # pending | paid | refunded
+    razorpay_order_id   = db.Column(db.String(100), nullable=True)
+    razorpay_payment_id = db.Column(db.String(100), nullable=True)
+    amount_paise    = db.Column(db.Integer, default=50000)           # ₹500
+    created_at      = db.Column(db.DateTime, default=datetime.utcnow)
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -133,6 +141,11 @@ def get_severity(disease):
 # ── Groq LLaMA3 AI Analysis ───────────────────────────────────────────────────
 # Get your FREE API key at https://console.groq.com (free tier: 14,400 req/day)
 GROQ_API_KEY = os.environ.get('GROQ_API_KEY', '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')
+
+# Razorpay — get free test keys at https://dashboard.razorpay.com → Settings → API Keys
+RAZORPAY_KEY_ID     = os.environ.get('RAZORPAY_KEY_ID',     'rzp_test_placeholder')
+RAZORPAY_KEY_SECRET = os.environ.get('RAZORPAY_KEY_SECRET', 'placeholder_secret')
+CONSULTATION_FEE   = 50000  # ₹500 in paise (100 paise = ₹1)
 
 def get_groq_analysis(symptoms_list, svm_disease, dataset_meds, dataset_diet, dataset_workout, dataset_precautions):
     """
@@ -397,25 +410,106 @@ def book_appointment():
         flash('Please fill all required fields.', 'danger')
         return redirect(url_for('appointments'))
 
-    # Check for slot conflict
-    conflict = Appointment.query.filter_by(doctor_id=doctor_id, date=date, time=time, status='scheduled').first()
+    conflict = Appointment.query.filter_by(doctor_id=doctor_id, date=date, time=time).filter(
+        Appointment.status.in_(['pending_payment', 'scheduled'])
+    ).first()
     if conflict:
         flash('That time slot is already booked. Please choose another.', 'warning')
         return redirect(url_for('appointments'))
 
-    room_id   = f"pharmalane-{uuid.uuid4().hex[:16]}"
+    room_id = f"pharmalane-{uuid.uuid4().hex[:16]}"
     appt = Appointment(
         patient_id=current_user.id,
         doctor_id=int(doctor_id),
-        date=date,
-        time=time,
-        reason=reason,
+        date=date, time=time, reason=reason,
         room_id=room_id,
-        meet_link=None
+        status='pending_payment',
+        payment_status='pending',
+        amount_paise=CONSULTATION_FEE
     )
     db.session.add(appt)
     db.session.commit()
-    flash('Appointment booked successfully!', 'success')
+    return redirect(url_for('payment_page', appt_id=appt.id))
+
+
+@app.route('/payment/<int:appt_id>')
+@login_required
+def payment_page(appt_id):
+    appt = Appointment.query.get_or_404(appt_id)
+    if appt.patient_id != current_user.id:
+        flash('Unauthorized.', 'danger')
+        return redirect(url_for('appointments'))
+    if appt.payment_status == 'paid':
+        return redirect(url_for('appointments'))
+
+    # Create Razorpay order
+    try:
+        client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
+        order  = client.order.create({
+            'amount':   appt.amount_paise,
+            'currency': 'INR',
+            'receipt':  f'appt_{appt.id}',
+            'notes':    {'appointment_id': str(appt.id), 'patient': current_user.name}
+        })
+        appt.razorpay_order_id = order['id']
+        db.session.commit()
+    except Exception as e:
+        print(f'Razorpay order error: {e}')
+        order = None
+
+    return render_template('payment.html',
+        appt=appt,
+        order=order,
+        key_id=RAZORPAY_KEY_ID,
+        amount=appt.amount_paise,
+        user_name=current_user.name,
+        user_email=current_user.email
+    )
+
+
+@app.route('/payment/verify', methods=['POST'])
+@login_required
+def payment_verify():
+    """Called by Razorpay after successful payment — verifies signature and confirms appointment."""
+    data = request.form
+    razorpay_order_id   = data.get('razorpay_order_id', '')
+    razorpay_payment_id = data.get('razorpay_payment_id', '')
+    razorpay_signature  = data.get('razorpay_signature', '')
+    appt_id             = data.get('appt_id', '')
+
+    appt = Appointment.query.get_or_404(int(appt_id))
+    if appt.patient_id != current_user.id:
+        flash('Unauthorized.', 'danger')
+        return redirect(url_for('appointments'))
+
+    try:
+        msg    = f"{razorpay_order_id}|{razorpay_payment_id}"
+        digest = hmac.new(RAZORPAY_KEY_SECRET.encode(), msg.encode(), hashlib.sha256).hexdigest()
+        valid  = hmac.compare_digest(digest, razorpay_signature)
+    except Exception:
+        valid = False
+
+    if valid:
+        appt.payment_status      = 'paid'
+        appt.status              = 'scheduled'
+        appt.razorpay_payment_id = razorpay_payment_id
+        appt.razorpay_order_id   = razorpay_order_id
+        db.session.commit()
+        flash('Payment successful! Your appointment is confirmed.', 'success')
+    else:
+        flash('Payment verification failed. Please contact support.', 'danger')
+
+    return redirect(url_for('appointments'))
+
+
+@app.route('/payment/cancel/<int:appt_id>')
+@login_required
+def payment_cancel(appt_id):
+    appt = Appointment.query.get_or_404(appt_id)
+    if appt.patient_id == current_user.id and appt.payment_status == 'pending':
+        db.session.delete(appt)
+        db.session.commit()
+        flash('Booking cancelled.', 'info')
     return redirect(url_for('appointments'))
 
 @app.route('/set-meet-link/<int:appt_id>', methods=['POST'])

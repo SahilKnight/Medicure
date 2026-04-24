@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+{% block title %}Payment — PharmaLane{% endblock %}
+
+{% block extra_css %}
+<style>
+  .pay-page {
+    min-height: calc(100vh - 62px);
+    display: flex; align-items: center; justify-content: center;
+    background: radial-gradient(ellipse at 50% 30%, rgba(0,201,167,0.07) 0%, transparent 60%), var(--bg-dark);
+    padding: 2rem 1rem;
+  }
+  .pay-card {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 20px; padding: 2.5rem;
+    width: 100%; max-width: 480px;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+  }
+  .pay-header { text-align: center; margin-bottom: 2rem; }
+  .pay-header .icon {
+    width: 64px; height: 64px; border-radius: 50%;
+    background: rgba(0,201,167,0.12); border: 2px solid rgba(0,201,167,0.3);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.6rem; color: var(--primary); margin: 0 auto 1rem;
+  }
+  .pay-header h4 { font-weight: 700; margin-bottom: 0.3rem; }
+  .pay-header p { color: var(--text-muted); font-size: 0.88rem; margin: 0; }
+
+  .summary-box {
+    background: var(--bg-card2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 1.2rem; margin-bottom: 1.5rem;
+  }
+  .summary-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0.5rem 0; border-bottom: 1px solid var(--border);
+    font-size: 0.88rem;
+  }
+  .summary-row:last-child { border-bottom: none; }
+  .summary-row .lbl { color: var(--text-muted); }
+  .summary-row .val { font-weight: 600; }
+  .amount-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 1rem; margin-bottom: 1.5rem;
+    background: rgba(0,201,167,0.08); border: 1px solid rgba(0,201,167,0.2);
+    border-radius: 10px;
+  }
+  .amount-row .lbl { font-weight: 600; font-size: 0.95rem; }
+  .amount-row .val { font-size: 1.6rem; font-weight: 800; color: var(--primary); }
+
+  .btn-pay {
+    width: 100%; padding: 0.9rem; font-size: 1rem; font-weight: 700;
+    background: var(--primary); color: #000; border: none; border-radius: 10px;
+    cursor: pointer; transition: all 0.2s; margin-bottom: 0.8rem;
+  }
+  .btn-pay:hover { background: var(--primary-dark); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0,201,167,0.3); }
+  .btn-cancel-pay {
+    width: 100%; padding: 0.7rem; font-size: 0.88rem; font-weight: 500;
+    background: transparent; color: var(--text-muted);
+    border: 1px solid var(--border); border-radius: 10px;
+    cursor: pointer; transition: all 0.2s; text-decoration: none;
+    display: block; text-align: center;
+  }
+  .btn-cancel-pay:hover { color: #f85149; border-color: rgba(248,81,73,0.3); }
+
+  .secure-note {
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    font-size: 0.78rem; color: var(--text-muted); margin-top: 1rem;
+  }
+  .secure-note i { color: var(--primary); }
+
+  .payment-methods {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    margin-top: 0.8rem; flex-wrap: wrap;
+  }
+  .pm-badge {
+    background: var(--bg-card2); border: 1px solid var(--border);
+    border-radius: 6px; padding: 0.25rem 0.6rem;
+    font-size: 0.72rem; color: var(--text-muted); font-weight: 500;
+  }
+
+  /* Test mode banner */
+  .test-banner {
+    background: rgba(240,165,0,0.1); border: 1px solid rgba(240,165,0,0.25);
+    border-radius: 8px; padding: 0.6rem 1rem; margin-bottom: 1.2rem;
+    font-size: 0.8rem; color: #f0a500; text-align: center;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="pay-page">
+  <div class="pay-card">
+
+    <div class="pay-header">
+      <div class="icon"><i class="fa fa-shield-halved"></i></div>
+      <h4>Complete Payment</h4>
+      <p>Secure payment to confirm your appointment</p>
+    </div>
+
+    {% if key_id and key_id.startswith('rzp_test') %}
+    <div class="test-banner">
+      <i class="fa fa-flask me-1"></i> Test Mode — Use card <strong>4111 1111 1111 1111</strong>, any future date, CVV <strong>123</strong>
+    </div>
+    {% endif %}
+
+    <!-- Appointment Summary -->
+    <div class="summary-box">
+      <div class="summary-row">
+        <span class="lbl">Doctor</span>
+        <span class="val">{{ appt.doctor.name }}</span>
+      </div>
+      <div class="summary-row">
+        <span class="lbl">Specialty</span>
+        <span class="val">{{ appt.doctor.specialty }}</span>
+      </div>
+      <div class="summary-row">
+        <span class="lbl">Date</span>
+        <span class="val">{{ appt.date }}</span>
+      </div>
+      <div class="summary-row">
+        <span class="lbl">Time</span>
+        <span class="val">{{ appt.time }}</span>
+      </div>
+      {% if appt.reason %}
+      <div class="summary-row">
+        <span class="lbl">Reason</span>
+        <span class="val">{{ appt.reason[:40] }}{% if appt.reason|length > 40 %}...{% endif %}</span>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Amount -->
+    <div class="amount-row">
+      <span class="lbl"><i class="fa fa-indian-rupee-sign me-1"></i>Consultation Fee</span>
+      <span class="val">₹{{ (amount / 100) | int }}</span>
+    </div>
+
+    {% if order %}
+    <!-- Razorpay Payment Button -->
+    <button class="btn-pay" id="payBtn" onclick="openRazorpay()">
+      <i class="fa fa-lock me-2"></i>Pay ₹{{ (amount / 100) | int }} Securely
+    </button>
+
+    <!-- Hidden form to submit payment verification -->
+    <form id="paymentForm" method="POST" action="{{ url_for('payment_verify') }}" style="display:none;">
+      <input type="hidden" name="razorpay_order_id"   id="rzp_order_id" />
+      <input type="hidden" name="razorpay_payment_id" id="rzp_payment_id" />
+      <input type="hidden" name="razorpay_signature"  id="rzp_signature" />
+      <input type="hidden" name="appt_id"             value="{{ appt.id }}" />
+    </form>
+
+    {% else %}
+    <!-- Razorpay not configured — show manual instructions -->
+    <div style="background:rgba(248,81,73,0.07);border:1px solid rgba(248,81,73,0.2);border-radius:10px;padding:1rem;margin-bottom:1rem;font-size:0.85rem;color:#c9d1d9;line-height:1.6;">
+      <strong style="color:#f85149"><i class="fa fa-exclamation-triangle me-1"></i>Payment gateway not configured.</strong><br>
+      Add <code>RAZORPAY_KEY_ID</code> and <code>RAZORPAY_KEY_SECRET</code> to your environment variables.
+      Get free test keys at <a href="https://dashboard.razorpay.com" target="_blank" style="color:#58a6ff">dashboard.razorpay.com</a>
+    </div>
+    {% endif %}
+
+    <a href="{{ url_for('payment_cancel', appt_id=appt.id) }}" class="btn-cancel-pay"
+       onclick="return confirm('Cancel this booking?')">
+      <i class="fa fa-times me-1"></i>Cancel Booking
+    </a>
+
+    <div class="secure-note">
+      <i class="fa fa-lock"></i> 256-bit SSL encrypted · Powered by Razorpay
+    </div>
+    <div class="payment-methods">
+      <span class="pm-badge">💳 Cards</span>
+      <span class="pm-badge">📱 UPI</span>
+      <span class="pm-badge">🏦 Net Banking</span>
+      <span class="pm-badge">💰 Wallets</span>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if order %}
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+  function openRazorpay() {
+    const btn = document.getElementById('payBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin me-2"></i>Opening payment...';
+
+    const options = {
+      key:         '{{ key_id }}',
+      amount:      {{ amount }},
+      currency:    'INR',
+      name:        'PharmaLane',
+      description: 'Consultation with {{ appt.doctor.name }}',
+      order_id:    '{{ order.id }}',
+      prefill: {
+        name:  '{{ user_name | e }}',
+        email: '{{ user_email | e }}'
+      },
+      theme: { color: '#00c9a7' },
+      modal: {
+        ondismiss: function() {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fa fa-lock me-2"></i>Pay ₹{{ (amount / 100) | int }} Securely';
+        }
+      },
+      handler: function(response) {
+        document.getElementById('rzp_order_id').value   = response.razorpay_order_id;
+        document.getElementById('rzp_payment_id').value = response.razorpay_payment_id;
+        document.getElementById('rzp_signature').value  = response.razorpay_signature;
+        btn.innerHTML = '<i class="fa fa-check me-2"></i>Verifying payment...';
+        document.getElementById('paymentForm').submit();
+      }
+    };
+
+    const rzp = new Razorpay(options);
+    rzp.on('payment.failed', function(resp) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa fa-lock me-2"></i>Pay ₹{{ (amount / 100) | int }} Securely';
+      alert('Payment failed: ' + resp.error.description);
+    });
+    rzp.open();
+  }
+</script>
+{% endif %}
+{% endblock %}

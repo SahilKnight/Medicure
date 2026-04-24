@@ -92,6 +92,7 @@
   .status-scheduled { background: rgba(0,201,167,0.12); color: var(--primary); border: 1px solid rgba(0,201,167,0.25); }
   .status-cancelled { background: rgba(248,81,73,0.12); color: #f85149; border: 1px solid rgba(248,81,73,0.25); }
   .status-completed { background: rgba(63,185,80,0.12); color: #3fb950; border: 1px solid rgba(63,185,80,0.25); }
+  .status-pending_payment { background: rgba(240,165,0,0.12); color: #f0a500; border: 1px solid rgba(240,165,0,0.25); }
   .btn-join { background: var(--primary); color: #000; font-weight: 600; border: none; border-radius: 6px; padding: 0.4rem 1rem; font-size: 0.82rem; text-decoration: none; transition: all 0.2s; }
   .btn-join:hover { background: var(--primary-dark); color: #000; }
   .btn-cancel { background: transparent; color: #f85149; border: 1px solid rgba(248,81,73,0.3); border-radius: 6px; padding: 0.4rem 0.8rem; font-size: 0.8rem; transition: all 0.2s; }
@@ -192,9 +193,14 @@
               {% if appt.reason %} · {{ appt.reason[:50] }}{% if appt.reason|length > 50 %}...{% endif %}{% endif %}
             </small>
           </div>
-          <span class="status-badge status-{{ appt.status }}">{{ appt.status.capitalize() }}</span>
-          {% if appt.status == 'scheduled' %}
-          <a href="{{ url_for('video_call', room_id=appt.room_id) }}" class="btn-join" target="_blank">
+          <span class="status-badge status-{{ appt.status }}">{{ appt.status.replace('_',' ').capitalize() }}</span>
+          {% if appt.payment_status == 'pending' %}
+            <a href="{{ url_for('payment_page', appt_id=appt.id) }}" class="btn-join" style="background:#f0a500; color:#000;">
+              <i class="fa fa-credit-card me-1"></i>Pay ₹500
+            </a>
+            <a href="{{ url_for('payment_cancel', appt_id=appt.id) }}" class="btn-cancel" onclick="return confirm('Cancel this booking?')">Cancel</a>
+          {% elif appt.status == 'scheduled' and appt.payment_status == 'paid' %}
+          <a href="{{ url_for('video_call', room_id=appt.room_id) }}" class="btn-join">
             <i class="fa fa-video me-1"></i>Join Call
           </a>
           <form method="POST" action="{{ url_for('cancel_appointment', appt_id=appt.id) }}" style="display:inline;">
